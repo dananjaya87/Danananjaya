@@ -1,280 +1,189 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLYMP TRADE PRO - V2 AUTO</title>
-    <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
+    <title>1089 ULTIMATE AUTO-SIGNAL ENGINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #151a25;
-            --bg-card: #1e2532;
-            --border: #2a3447;
-            --green: #00e676;
-            --red: #ff1744;
-            --blue: #2979ff;
-            --yellow: #ffea00;
-            --text-primary: #ffffff;
-            --text-secondary: #8b92a8;
+            --bg: #05070a; --panel: #0d1117; --neon-blue: #00d2ff;
+            --neon-green: #39ff14; --neon-red: #ff3131; --text: #e0e6ed; --border: #1a222d;
         }
+        body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        .header { background: var(--panel); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
 
-        body { background: var(--bg-primary); color: var(--text-primary); font-family: 'Segoe UI', sans-serif; }
+        .container { display: grid; grid-template-columns: 1fr 380px; gap: 10px; padding: 10px; flex: 1; overflow: hidden; }
+        
+        /* Main Signal Area */
+        .signal-view { background: var(--panel); border-radius: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .acc-display { font-family: 'Orbitron', sans-serif; font-size: 5.5rem; color: var(--neon-green); margin-bottom: 0; }
+        .sig-status { font-size: 2.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* Sidebar Rules */
+        .rules-sidebar { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .rule-group { background: var(--panel); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .group-title { font-size: 0.75rem; color: #848e9c; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 1px solid #1a222d; padding-bottom: 5px; }
+        
+        .indicator { background: #161b22; padding: 10px; margin-bottom: 6px; border-radius: 6px; display: flex; justify-content: space-between; font-size: 0.9rem; border-left: 3px solid #333; transition: 0.3s; }
+        .indicator.active-setup { border-left-color: var(--neon-green); color: white; background: rgba(57, 255, 20, 0.05); }
+        .indicator.active-confirm { border-left-color: var(--neon-blue); color: white; background: rgba(0, 210, 255, 0.05); }
 
-        .header {
-            background: linear-gradient(135deg, #1e2532 0%, #0a0e1a 100%);
-            border-bottom: 2px solid var(--blue);
-            padding: 12px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .log-window { height: 120px; background: #000; color: #39ff14; font-family: monospace; font-size: 0.75rem; padding: 8px; border-radius: 8px; overflow-y: auto; margin-top: 5px; }
 
-        .container {
-            display: grid; grid-template-columns: 1fr 360px;
-            gap: 15px; padding: 15px; max-width: 1600px; margin: 0 auto;
-        }
-
-        .chart-section { background: var(--bg-secondary); border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
-        #chart { width: 100%; height: 500px; }
-
-        .sidebar { display: flex; flex-direction: column; gap: 15px; }
-        .card { background: var(--bg-card); border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
-
-        .signal-box {
-            background: linear-gradient(135deg, #1e2532 0%, #2a3447 100%);
-            border-radius: 12px; padding: 20px; text-align: center; border: 2px solid var(--blue);
-        }
-
-        .signal-status { font-size: 28px; font-weight: bold; margin: 5px 0; letter-spacing: 2px; }
-        .signal-buy { color: var(--green); text-shadow: 0 0 20px var(--green); }
-        .signal-sell { color: var(--red); text-shadow: 0 0 20px var(--red); }
-        .signal-wait { color: var(--text-secondary); }
-
-        .score-bar-bg { height: 10px; background: #111; border-radius: 5px; overflow: hidden; margin-top: 10px; }
-        .score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--yellow), var(--green)); transition: width 0.5s; }
-
-        .checklist { display: flex; flex-direction: column; gap: 8px; }
-        .check-item {
-            display: flex; justify-content: space-between; padding: 10px;
-            background: var(--bg-secondary); border-radius: 6px; font-size: 13px;
-            border-left: 4px solid transparent;
-        }
-        .check-item.active { border-left-color: var(--green); background: rgba(0, 230, 118, 0.05); }
-        .check-item.inactive { border-left-color: var(--red); opacity: 0.6; }
-
-        select {
-            background: var(--bg-card); color: white; border: 1px solid var(--border);
-            padding: 8px; border-radius: 6px; outline: none;
-        }
-
-        .history-item { display: flex; justify-content: space-between; padding: 8px; font-size: 12px; border-bottom: 1px solid var(--border); }
-
-        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        /* Animations */
+        .pulse-buy { animation: pulse-g 1.5s infinite; }
+        .pulse-sell { animation: pulse-r 1.5s infinite; }
+        @keyframes pulse-g { 0%, 100% { box-shadow: inset 0 0 10px rgba(57, 255, 20, 0); } 50% { box-shadow: inset 0 0 40px rgba(57, 255, 20, 0.2); } }
+        @keyframes pulse-r { 0%, 100% { box-shadow: inset 0 0 10px rgba(255, 49, 49, 0); } 50% { box-shadow: inset 0 0 40px rgba(255, 49, 49, 0.2); } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="font-weight: bold; color: var(--blue);">📊 OLYMP PRO V2 (AUTO)</div>
-        <div id="clock" style="color: var(--yellow); font-family: monospace;">00:00:00</div>
+        <div class="logo">1089 AI ENGINE AUTO-SCAN</div>
+        <div id="connection" style="color:var(--neon-blue)">INITIALIZING...</div>
     </div>
 
     <div class="container">
-        <div class="chart-section">
-            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-                <select id="market">
-                    <option value="R_100">Volatility 100</option>
-                    <option value="R_75">Volatility 75</option>
-                    <option value="R_50">Volatility 50</option>
-                    <option value="R_25">Volatility 25</option>
-                    <option value="R_10">Volatility 10</option>
-                </select>
-                <select id="timeframe">
-                    <option value="60">1 Minute</option>
-                    <option value="300">5 Minutes</option>
-                </select>
-            </div>
-            <div id="chart"></div>
+        <!-- Center Signal View -->
+        <div class="signal-view" id="mainBox">
+            <div style="color: #848e9c; font-size: 0.9rem; letter-spacing: 4px;">CONFIDENCE LEVEL</div>
+            <div class="acc-dial acc-display" id="accuracy">00%</div>
+            <div class="sig-status" id="signalLabel">WAITING...</div>
+            <div id="price" style="margin-top: 20px; font-weight: bold; color: var(--neon-blue);">PRICE: --.----</div>
         </div>
 
-        <div class="sidebar">
-            <div class="signal-box">
-                <div style="font-size: 12px; color: var(--text-secondary);">CURRENT SIGNAL</div>
-                <div id="signalStatus" class="signal-status signal-wait">ANALYZING...</div>
-                <div style="font-size: 14px; color: var(--yellow); font-weight: bold;"><span id="accuracy">0</span>% CONFIDENCE</div>
+        <!-- Right Sidebar Boxes -->
+        <div class="rules-sidebar">
+            <!-- Box 1: The 5 Techniques (Setups) -->
+            <div class="rule-group">
+                <div class="group-title">Setup Indicators (ප්‍රධාන සාධක 5)</div>
+                <div class="indicator" id="s1">1. One Colour Streak <span>-</span></div>
+                <div class="indicator" id="s2">2. Proper Engulfing <span>-</span></div>
+                <div class="indicator" id="s3">3. Key Level (Round) <span>-</span></div>
+                <div class="indicator" id="s4">4. Valid FVG Zone <span>-</span></div>
+                <div class="indicator" id="s5">5. Hidden Open Point <span>-</span></div>
             </div>
 
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                    <span>Signal Strength</span>
-                    <span id="scoreText">0/7</span>
-                </div>
-                <div class="score-bar-bg"><div id="scoreBar" class="score-bar-fill" style="width: 0%"></div></div>
+            <!-- Box 2: Confirmations (අමතර සාධක) -->
+            <div class="rule-group" style="border-color: var(--neon-blue);">
+                <div class="group-title" style="color: var(--neon-blue);">Confirmations (අමතර සාධක)</div>
+                <div class="indicator" id="c1">BOS (Break of Structure) <span>-</span></div>
+                <div class="indicator" id="c2">ChoCh (Change Direction) <span>-</span></div>
+                <div class="indicator" id="c3">Trend Line Alignment <span>-</span></div>
             </div>
 
-            <div class="card">
-                <div class="checklist" id="checklist">
-                    <div class="check-item inactive" id="c1">Trend Alignment <span>✕</span></div>
-                    <div class="check-item inactive" id="c2">Momentum Support <span>✕</span></div>
-                    <div class="check-item inactive" id="c3">Structure Break <span>✕</span></div>
-                    <div class="check-item inactive" id="c4">Volume Confirmation <span>✕</span></div>
-                    <div class="check-item inactive" id="c5">Pattern Power <span>✕</span></div>
-                    <div class="check-item inactive" id="c6">FVG / Gap <span>✕</span></div>
-                    <div class="check-item inactive" id="c7">Auto Key Level <span>✕</span></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">RECENT SIGNALS</div>
-                <div id="history"></div>
-            </div>
+            <div class="log-window" id="logs">Booting 1089 System...</div>
         </div>
     </div>
 
     <script>
-        let chart, candleSeries;
+        const app_id = 1089;
+        const ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${app_id}`);
         let candles = [];
-        let ws;
-        let lastSignalTime = 0;
+        let high_peak = 0; let low_peak = 999999;
 
-        function initChart() {
-            chart = LightweightCharts.createChart(document.getElementById('chart'), {
-                layout: { background: { color: '#0a0e1a' }, textColor: '#8b92a8' },
-                grid: { vertLines: { color: '#151a25' }, horzLines: { color: '#151a25' } },
-                rightPriceScale: { borderColor: '#2a3447' },
-                timeScale: { borderColor: '#2a3447', timeVisible: true }
-            });
-            candleSeries = chart.addCandlestickSeries({
-                upColor: '#00e676', downColor: '#ff1744',
-                borderUpColor: '#00e676', borderDownColor: '#ff1744',
-                wickUpColor: '#00e676', wickDownColor: '#ff1744'
-            });
-        }
+        ws.onopen = () => {
+            document.getElementById('connection').innerText = "CONNECTED";
+            ws.send(JSON.stringify({ ticks_history: "R_100", count: 100, end: "latest", style: "candles", subscribe: 1 }));
+            addLog("Connected to Volatility 100...");
+        };
 
-        function connect() {
-            if(ws) ws.close();
-            const market = document.getElementById('market').value;
-            const tf = document.getElementById('timeframe').value;
-            ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
-            ws.onopen = () => {
-                ws.send(JSON.stringify({
-                    ticks_history: market, subscribe: 1, end: 'latest', 
-                    granularity: parseInt(tf), count: 200, style: 'candles'
-                }));
-            };
-            ws.onmessage = (msg) => {
-                const data = JSON.parse(msg.data);
-                if (data.candles) {
-                    candles = data.candles.map(c => ({ time: c.epoch, open: c.open, high: c.high, low: c.low, close: c.close }));
-                    candleSeries.setData(candles);
+        ws.onmessage = (msg) => {
+            const data = JSON.parse(msg.data);
+            if (data.candles) candles = data.candles;
+            if (data.ohlc) {
+                if (candles.length > 0 && candles[candles.length - 1].epoch === data.ohlc.open_time) {
+                    candles[candles.length - 1] = data.ohlc;
+                } else {
+                    candles.push(data.ohlc);
+                    if (candles.length > 100) candles.shift();
                 }
-                if (data.ohlc) {
-                    const c = data.ohlc;
-                    const newCandle = { time: c.open_time, open: c.open, high: c.high, low: c.low, close: c.close };
-                    if (candles.length > 0 && candles[candles.length-1].time === newCandle.time) {
-                        candles[candles.length-1] = newCandle;
-                    } else {
-                        candles.push(newCandle);
-                    }
-                    candleSeries.update(newCandle);
-                    runAutoAnalysis();
-                }
-            };
-        }
-
-        function runAutoAnalysis() {
-            if (candles.length < 50) return;
-            const current = candles[candles.length - 1];
-            const prev = candles[candles.length - 2];
-            const prev2 = candles[candles.length - 3];
-            let score = 0;
-            let checks = {};
-
-            // 1. Trend Alignment (SMA 20 equivalent)
-            const sma20 = candles.slice(-20).reduce((a, b) => a + b.close, 0) / 20;
-            checks.c1 = current.close > sma20; // Up if above SMA
-            if(checks.c1 || current.close < sma20) score++;
-
-            // 2. Momentum (Last 2 candles same direction)
-            checks.c2 = (current.close > current.open && prev.close > prev.open) || (current.close < current.open && prev.close < prev.open);
-            if(checks.c2) score++;
-
-            // 3. Structure Break (BOS/ChoCH Combined)
-            const recentHigh = Math.max(...candles.slice(-15, -1).map(c => c.high));
-            const recentLow = Math.min(...candles.slice(-15, -1).map(c => c.low));
-            checks.c3 = current.close > recentHigh || current.close < recentLow;
-            if(checks.c3) score++;
-
-            // 4. Volume Confirmation (Size of candle)
-            const avgBody = candles.slice(-10).reduce((a, b) => a + Math.abs(b.close - b.open), 0) / 10;
-            checks.c4 = Math.abs(current.close - current.open) > avgBody;
-            if(checks.c4) score++;
-
-            // 5. Pattern Power (Engulfing or Strong Pin Bar)
-            checks.c5 = Math.abs(current.close - current.open) > Math.abs(prev.close - prev.open);
-            if(checks.c5) score++;
-
-            // 6. FVG / Gap
-            checks.c6 = Math.abs(prev2.high - current.low) > 0 || Math.abs(prev2.low - current.high) > 0;
-            if(checks.c6) score++;
-
-            // 7. Auto Key Level (Price near a pivot)
-            const pivots = candles.slice(-50, -5).filter((c, i, arr) => (i>1 && c.high > arr[i-1].high && c.high > arr[i+1].high) || (i>1 && c.low < arr[i-1].low && c.low < arr[i+1].low));
-            checks.c7 = pivots.some(p => Math.abs(p.high - current.close) / current.close < 0.001);
-            if(checks.c7) score++;
-
-            updateUI(score, checks, current, prev);
-        }
-
-        function updateUI(score, checks, current, prev) {
-            for(let i=1; i<=7; i++) {
-                const el = document.getElementById('c'+i);
-                if(checks['c'+i]) { el.className = 'check-item active'; el.querySelector('span').innerText = '✓'; }
-                else { el.className = 'check-item inactive'; el.querySelector('span').innerText = '✕'; }
+                run1089Logic();
             }
+        };
 
-            document.getElementById('scoreText').innerText = score + '/7';
-            document.getElementById('scoreBar').style.width = (score/7*100) + '%';
+        function run1089Logic() {
+            if (candles.length < 10) return;
+            const cur = candles[candles.length-1];
+            const prev = candles[candles.length-2];
+            const p2 = candles[candles.length-3];
+            const p3 = candles[candles.length-4];
 
-            const statusEl = document.getElementById('signalStatus');
-            const accEl = document.getElementById('accuracy');
+            document.getElementById('price').innerText = `LIVE PRICE: ${cur.close}`;
 
-            if(score >= 5) {
-                const type = current.close > prev.close ? 'BUY' : 'SELL';
-                statusEl.innerText = type + ' !';
-                statusEl.className = 'signal-status ' + (type === 'BUY' ? 'signal-buy' : 'signal-sell');
-                accEl.innerText = (score === 7) ? "95" : (score === 6 ? "85" : "75");
-                
-                if(Date.now() - lastSignalTime > 60000) { // 1 min cool down
-                    addHistory(type, score);
-                    lastSignalTime = Date.now();
-                    speak(type);
-                }
+            let setupCount = 0; let confirmCount = 0;
+
+            // --- SETUPS LOGIC ---
+            // S1: One Color (3 candles)
+            const isUp = (c) => c.close > c.open;
+            if((isUp(cur) && isUp(prev) && isUp(p2)) || (!isUp(cur) && !isUp(prev) && !isUp(p2))) { setupCount++; setOn('s1', 'setup'); } else setOff('s1');
+
+            // S2: Engulfing
+            if(isUp(cur) && !isUp(prev) && cur.close > prev.open) { setupCount++; setOn('s2', 'setup'); }
+            else if(!isUp(cur) && isUp(prev) && cur.close < prev.open) { setupCount++; setOn('s2', 'setup'); } else setOff('s2');
+
+            // S3: Round Number
+            if(Math.abs(cur.close - Math.round(cur.close)) < 0.1) { setupCount++; setOn('s3', 'setup'); } else setOff('s3');
+
+            // S4: FVG
+            if(p2.high < cur.low || p2.low > cur.high) { setupCount++; setOn('s4', 'setup'); } else setOff('s4');
+
+            // S5: Hidden Open Point
+            if(Math.abs(cur.open - prev.close) > 0.02) { setupCount++; setOn('s5', 'setup'); } else setOff('s5');
+
+            // --- CONFIRMATION LOGIC ---
+            // C1: BOS
+            if(cur.close > high_peak) { high_peak = cur.high; confirmCount++; setOn('c1', 'confirm'); }
+            else if(cur.close < low_peak) { low_peak = cur.low; confirmCount++; setOn('c1', 'confirm'); } else setOff('c1');
+
+            // C2: ChoCh (Simple reverse of trend)
+            if((isUp(cur) && !isUp(prev) && !isUp(p2)) || (!isUp(cur) && isUp(prev) && isUp(p2))) { confirmCount++; setOn('c2', 'confirm'); } else setOff('c2');
+
+            // C3: Trend Line (Last 10 slope)
+            let slope = cur.close - candles[candles.length-10].close;
+            if((slope > 0 && isUp(cur)) || (slope < 0 && !isUp(cur))) { confirmCount++; setOn('c3', 'confirm'); } else setOff('c3');
+
+            // --- FINAL SIGNAL CALCULATION ---
+            const mainBox = document.getElementById('mainBox');
+            const accVal = document.getElementById('accuracy');
+            const label = document.getElementById('signalLabel');
+
+            let totalAcc = (setupCount * 12) + (confirmCount * 13);
+            if(totalAcc > 99) totalAcc = 99;
+            accVal.innerText = totalAcc + "%";
+
+            // සිග්නල් එකක් දෙන්නේ බොක්ස් දෙකේම අවම වශයෙන් එකක්වත් DETECT වුණොත් පමණි.
+            if(setupCount >= 1 && confirmCount >= 1) {
+                const side = isUp(cur) ? "BUY" : "SELL";
+                label.innerText = "STRONG " + side;
+                label.style.color = isUp(cur) ? "var(--neon-green)" : "var(--neon-red)";
+                mainBox.className = "signal-view " + (isUp(cur) ? "pulse-buy" : "pulse-sell");
+                if(totalAcc > 70) addLog(`>>> ALERT: ${totalAcc}% ${side} SIGNAL FOUND!`);
             } else {
-                statusEl.innerText = 'WAITING...';
-                statusEl.className = 'signal-status signal-wait';
-                accEl.innerText = '0';
+                label.innerText = "SCANNING...";
+                label.style.color = "#fff";
+                mainBox.className = "signal-view";
             }
         }
 
-        function addHistory(type, score) {
-            const h = document.getElementById('history');
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `<span>${new Date().toLocaleTimeString()}</span> <b style="color:${type==='BUY'?'#00e676':'#ff1744'}">${type}</b> <span>Score: ${score}/7</span>`;
-            h.prepend(div);
-            if(h.children.length > 5) h.lastChild.remove();
+        function setOn(id, type) { 
+            const e = document.getElementById(id); 
+            e.className = 'indicator active-' + type; 
+            e.querySelector('span').innerText = "DETECTED"; 
         }
-
-        function speak(t) {
-            const m = new SpeechSynthesisUtterance(t + " Signal Detected. Strength " + document.getElementById('scoreText').innerText);
-            window.speechSynthesis.speak(m);
+        function setOff(id) { 
+            const e = document.getElementById(id); 
+            e.className = 'indicator'; 
+            e.querySelector('span').innerText = "-"; 
         }
-
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
-        document.getElementById('market').addEventListener('change', connect);
-        document.getElementById('timeframe').addEventListener('change', connect);
-        window.onload = () => { initChart(); connect(); };
+        function addLog(m) { 
+            const l = document.getElementById('logs'); 
+            l.innerHTML += `<br>> ${m}`; 
+            l.scrollTop = l.scrollHeight; 
+        }
     </script>
 </body>
 </html>
