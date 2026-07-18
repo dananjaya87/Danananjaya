@@ -3,170 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Dashboard - DANANJAYA</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>DANANJAYA SIGNALS - Trading Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
+        :root {
+            --bg-color: #090d14;
+            --card-bg: #121721;
+            --text-main: #ffffff;
+            --text-dim: #848e9c;
+            --green: #00ff88;
+            --red: #ff4d4d;
+            --accent: #3d85ff;
+            --border: #1e2633;
+        }
+
         body {
-            background-color: #0d1117;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .logo-area h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .logo-area span {
+            color: var(--green);
+        }
+
+        .market-status {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: var(--green);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            box-shadow: 0 0 10px var(--green);
+        }
+
+        /* Top Bar Info */
+        .top-info {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .label { color: var(--text-dim); font-size: 12px; margin-bottom: 5px; }
+        .value { font-size: 18px; font-weight: bold; }
+        .up { color: var(--green); }
+
+        /* Left Column */
+        .main-chart-area {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .main-container {
-            width: 90%;
-            max-width: 900px;
-            background: #161b22;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #30363d;
-            text-align: center;
-        }
-
-        /* 1089 වෙනුවට DANANJAYA නම */
-        .header-name {
-            font-size: 36px;
-            font-weight: bold;
-            color: #00ffcc; /* වෙනත් කැපී පෙනෙන වර්ණයක් */
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
-        }
-
-        /* Live Chart Area */
-        .chart-box {
-            width: 100%;
-            height: 350px;
-            background: #0d1117;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            padding: 10px;
-        }
-
-        /* පල්ලෙහා තියෙන Boxes සැකසුම */
-        .footer-layout {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* පල්ලෙහාටම සමාන වෙන්න */
             gap: 20px;
-            margin-top: 20px;
         }
 
-        .large-box {
-            width: 150px;
-            height: 100px;
-            background: linear-gradient(145deg, #1f2937, #111827);
-            border: 2px solid #3b82f6;
+        #chart-container {
+            background: var(--card-bg);
+            height: 450px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
         }
 
-        .smallest-box {
-            width: 80px;
-            height: 50px;
-            background: #30363d;
-            border: 2px solid #8b5cf6;
-            border-radius: 8px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #aaa;
+        .history-table {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
         }
 
-        /* දිනය සහ වේලාව */
-        .live-info {
-            margin-top: 30px;
-            padding: 10px;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #ff9f43; /* ලස්සන වෙනත් වර්ණයක් */
-            font-weight: bold;
-            font-size: 18px;
-            border: 1px dashed #ff9f43;
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: var(--text-dim); font-size: 12px; padding-bottom: 10px; }
+        td { padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; }
+
+        /* Right Column */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
+        .signal-card {
+            background: linear-gradient(145deg, #16202e, #121721);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--green);
+        }
+
+        .signal-type { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; }
+        
+        .confidence-box {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: #1e2633;
+            border-radius: 6px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 87%;
+            background: var(--green);
+            box-shadow: 0 0 15px var(--green);
+        }
+
+        .checklist {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .check-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .check-icon { color: var(--green); }
+
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <!-- නම වෙනස් කළ කොටස -->
-        <div class="header-name">DANANJAYA</div>
-
-        <!-- Live Chart එක -->
-        <div class="chart-box">
-            <canvas id="liveChart"></canvas>
+<div class="dashboard">
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-area">
+            <h1>DANANJAYA <span>SIGNALS</span></h1>
         </div>
-
-        <!-- Box සැකසුම -->
-        <div class="footer-layout">
-            <div class="large-box">DATA A</div>
-            <div class="smallest-box">MINI</div>
-            <div class="large-box">DATA B</div>
+        <div class="market-status">
+            Time: <span id="clock">10:24:36 AM</span> | 
+            <span class="status-dot"></span> MARKET OPEN
         </div>
+    </header>
 
-        <!-- දිනය සහ වේලාව -->
-        <div class="live-info" id="dateTime">Loading Time...</div>
-    </div>
-
-    <script>
-        // Live Chart එක සෑදීම
-        const ctx = document.getElementById('liveChart').getContext('2d');
-        let chartData = Array.from({length: 12}, () => Math.floor(Math.random() * 100));
-        
-        const myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s'],
-                datasets: [{
-                    label: 'Live Market Flow',
-                    data: chartData,
-                    borderColor: '#00ffcc',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(0, 255, 204, 0.1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { display: false },
-                    x: { grid: { color: '#30363d' } }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        // Chart එක සජීවීව update කිරීම
-        setInterval(() => {
-            chartData.shift();
-            chartData.push(Math.floor(Math.random() * 100));
-            myChart.update();
-        }, 2000);
-
-        // දිනය සහ වේලාව සජීවීව පෙන්වීම
-        function updateTime() {
-            const now = new Date();
-            const options = { 
-                year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit', second: '2-digit'
-            };
-            document.getElementById('dateTime').innerHTML = "📅 " + now.toLocaleDateString('en-US', options);
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
-    </script>
-
-</body>
-</html>
+    <!-- Top Bar -->
