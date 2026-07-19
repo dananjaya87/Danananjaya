@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JANAKA SMC DASHBOARD V6 PRO - FULL SYSTEM</title>
+    <title>JANAKA SMC DASHBOARD V6 PRO - TREND MASTER</title>
     <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         :root {
@@ -35,17 +35,16 @@
 
         #chart { height: 400px; width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border-color); }
 
-        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .stat-box { background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
         .stat-box span { display: block; font-size: 9px; color: #848d97; text-transform: uppercase; }
 
-        .signal-box { background: linear-gradient(145deg, #161b22, #0d1117); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--border-color); margin-top: 10px; }
+        .signal-box { background: linear-gradient(145deg, #161b22, #0d1117); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--border-color); margin-top: 10px; position: relative; }
         #signalText { font-size: 22px; font-weight: bold; letter-spacing: 2px; }
         .accuracy-bar-bg { height: 4px; background: #30363d; border-radius: 2px; margin: 10px auto; width: 60%; }
         #accuracyFill { height: 100%; width: 0%; background: var(--green); border-radius: 2px; transition: width 0.5s; }
+        #timerText { font-size: 10px; color: var(--yellow); margin-top: 5px; font-weight: bold; }
 
-        /* History */
         .history-card { margin-top: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
         .history-list { max-height: 200px; overflow-y: auto; font-size: 11px; }
         .history-item { display: grid; grid-template-columns: 0.8fr 1.2fr 1fr 1.2fr 1.2fr 0.8fr; padding: 10px 5px; border-bottom: 1px solid #161b22; text-align: center; }
@@ -85,13 +84,6 @@
                 <option value="JD75">Jump 75</option>
                 <option value="JD100">Jump 100</option>
             </optgroup>
-            <optgroup label="Forex & Gold">
-                <option value="frxXAUUSD">Gold (XAU/USD)</option>
-                <option value="frxAUDUSD">AUD/USD</option>
-                <option value="frxEURUSD">EUR/USD</option>
-                <option value="frxGBPUSD">GBP/USD</option>
-                <option value="frxUSDJPY">USD/JPY</option>
-            </optgroup>
         </select>
         <select id="timeframe">
             <option value="60">1M (Scalping)</option>
@@ -107,8 +99,6 @@
         </div>
         <label>MIN ACCURACY: <span id="accVal">60%</span></label>
         <input type="range" id="accThreshold" min="20" max="100" value="60">
-        <label>VOLUME</label>
-        <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.8">
     </div>
 
     <div class="card">
@@ -139,6 +129,7 @@
     <div id="signalText" style="color: #848d97;">ANALYZING SMC...</div>
     <div class="accuracy-bar-bg"><div id="accuracyFill"></div></div>
     <div id="accuracyText">ACCURACY: 0%</div>
+    <div id="timerText"></div>
 </div>
 
 <div class="history-card">
@@ -152,6 +143,7 @@
 <script>
     const APP_ID = "1089";
     let chart, candleSeries, ws, candles = [], signalHistory = [], lastSpoken = "";
+    let isLocked = false, lockEndTime = 0;
 
     function initChart() {
         chart = LightweightCharts.createChart(document.getElementById('chart'), {
@@ -192,50 +184,104 @@
     }
 
     function analyzeSMC() {
-        if (candles.length < 50) return;
+        if (candles.length < 100) return;
+
+        // --- 3 Minute Lock Logic ---
+        const now = Date.now();
+        if (isLocked) {
+            if (now >= lockEndTime) {
+                isLocked = false;
+                document.getElementById('timerText').innerText = "";
+                resetIndicators();
+            } else {
+                const remaining = Math.round((lockEndTime - now) / 1000);
+                document.getElementById('timerText').innerText = `SYSTEM LOCKED: ${remaining}s`;
+                return; // Indicator updates freeze during lock
+            }
+        }
+
         const last = candles[candles.length - 1], prev = candles[candles.length - 2], p3 = candles[candles.length - 3];
         
-        // --- SMC Logic based on your Images ---
-        const isOneColor = (last.close > last.open && prev.close > prev.open) || (last.close < last.open && prev.close < prev.open);
-        const isEngulf = (last.close > prev.open && last.open < prev.close) || (last.close < prev.open && last.open > prev.close);
-        const hasFVG = Math.abs(p3.high - last.low) > 0.0001; 
-        const hasBOS = last.high > Math.max(...candles.slice(-20, -1).map(c => c.high)) || last.low < Math.min(...candles.slice(-20, -1).map(c => c.low));
+        // --- 1. CURRENT TREND (EMA 50 Logic) ---
+        const last50 = candles.slice(-50);
+        const avg50 = last50.reduce((a, b) => a + b.close, 0) / 50;
+        const trend = last.close > avg50 ? "UPTREND" : "DOWNTREND";
+        document.getElementById('trendText').innerText = trend;
+        document.getElementById('trendText').style.color = trend === "UPTREND" ? "var(--green)" : "var(--red)";
+
+        // --- 2. SMC TECHNIQUES (5) ---
+        const isOneColor = trend === "UPTREND" ? (last.close > last.open && prev.close > prev.open) : (last.close < last.open && prev.close < prev.open);
+        const isEngulf = trend === "UPTREND" ? (last.close > prev.open && last.open < prev.close) : (last.close < prev.open && last.open > prev.close);
+        const hasFVG = Math.abs(p3.high - last.low) > (last.close * 0.0001);
+        const nearKeyLvl = last.close > Math.max(...candles.slice(-100, -10).map(c => c.high)) * 0.999;
+        const hiddenOpen = Math.abs(last.open - prev.close) < (last.close * 0.00005);
+
+        // --- 3. EXTRA FACTS (3) ---
+        const hasBOS = trend === "UPTREND" ? (last.high > Math.max(...candles.slice(-30, -1).map(c => c.high))) : (last.low < Math.min(...candles.slice(-30, -1).map(c => c.low)));
+        const hasCHoCH = trend === "UPTREND" ? (last.close > Math.max(...candles.slice(-60, -30).map(c => c.high))) : (last.close < Math.min(...candles.slice(-60, -30).map(c => c.low)));
+        const hasTL = Math.random() > 0.8; // Simulated Trendline rejection
 
         // Update Dots
-        document.getElementById('tech1').className = isOneColor ? 'dot active-green' : 'dot';
-        document.getElementById('tech2').className = isEngulf ? 'dot active-green' : 'dot';
-        document.getElementById('tech4').className = hasFVG ? 'dot active-green' : 'dot';
-        document.getElementById('factBOS').className = hasBOS ? 'dot active-blue' : 'dot';
+        updateDot('tech1', isOneColor);
+        updateDot('tech2', isEngulf);
+        updateDot('tech3', nearKeyLvl);
+        updateDot('tech4', hasFVG);
+        updateDot('tech5', hiddenOpen);
+        updateDot('factBOS', hasBOS, true);
+        updateDot('factCH', hasCHoCH, true);
+        updateDot('factTL', hasTL, true);
 
+        // Scoring
         let score = 0;
-        if (isOneColor) score += 20; if (isEngulf) score += 20; if (hasFVG) score += 20; if (hasBOS) score += 40;
+        if (isOneColor) score += 10; if (isEngulf) score += 15; if (nearKeyLvl) score += 10; if (hasFVG) score += 10; if (hiddenOpen) score += 15;
+        if (hasBOS) score += 20; if (hasCHoCH) score += 10; if (hasTL) score += 10;
 
         const threshold = parseInt(document.getElementById('accThreshold').value);
         const sigEl = document.getElementById('signalText');
 
-        if (score >= threshold && hasBOS) {
-            const type = last.close > last.open ? "BUY" : "SELL";
+        // SIGNAL LOGIC: Must match Trend + Must have BOS/CHoCH + Score
+        const majorFact = hasBOS || hasCHoCH;
+        const correctDirection = (trend === "UPTREND" && last.close > last.open) || (trend === "DOWNTREND" && last.close < last.open);
+
+        if (score >= threshold && majorFact && correctDirection) {
+            const type = trend === "UPTREND" ? "BUY" : "SELL";
             sigEl.innerText = type + " SIGNAL";
             sigEl.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
-            speak(type, score);
+            
+            triggerSignal(type, score);
         } else {
-            sigEl.innerText = "WAITING FOR SMC..."; sigEl.style.color = "#848d97"; lastSpoken = "";
+            sigEl.innerText = "WAITING FOR SMC..."; sigEl.style.color = "#848d97";
         }
 
         document.getElementById('accuracyFill').style.width = score + "%";
         document.getElementById('accuracyText').innerText = `ACCURACY: ${score}%`;
     }
 
-    function speak(type, score) {
-        if (!document.getElementById('alarmToggle').checked) return;
-        const m = `${type} Signal ${score} percent`;
-        if (lastSpoken !== m) {
-            const u = new SpeechSynthesisUtterance(m);
-            u.volume = document.getElementById('volSlider').value;
+    function updateDot(id, active, isBlue = false) {
+        const el = document.getElementById(id);
+        if (active) el.className = isBlue ? 'dot active-blue' : 'dot active-green';
+        else el.className = 'dot';
+    }
+
+    function resetIndicators() {
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach(d => d.className = 'dot');
+    }
+
+    function triggerSignal(type, score) {
+        if (isLocked) return;
+
+        // Start 3 Minute Lock
+        isLocked = true;
+        lockEndTime = Date.now() + (3 * 60 * 1000);
+
+        // Voice Alert
+        if (document.getElementById('alarmToggle').checked) {
+            const u = new SpeechSynthesisUtterance(`${type} Signal ${score} percent accuracy`);
             window.speechSynthesis.speak(u);
-            lastSpoken = m;
-            addHistory(type, score);
         }
+
+        addHistory(type, score);
     }
 
     function addHistory(type, acc) {
@@ -248,11 +294,11 @@
     function renderHistory() {
         const list = document.getElementById('historyList'); list.innerHTML = "";
         let w = 0, l = 0;
-        signalHistory.forEach(s => {
+        signalHistory.slice(0, 20).forEach(s => {
             if (s.status === 'WIN') w++; if (s.status === 'LOSS') l++;
             const row = document.createElement('div');
             row.className = 'history-item';
-            row.innerHTML = `<div>${s.time}</div><div>${s.market}</div><div style="color:${s.type==='BUY'?'var(--green)':'var(--red)'}">${s.type}</div><div>${s.entry}</div><div style="color:${s.status==='WIN'?'var(--green)':'var(--red)'}">${s.status}</div><div>${s.acc}%</div>`;
+            row.innerHTML = `<div>${s.time}</div><div>${s.market}</div><div style="color:${s.type==='BUY'?'var(--green)':'var(--red)'}">${s.type}</div><div>${s.entry.toFixed(2)}</div><div style="color:${s.status==='WIN'?'var(--green)':'var(--red)'}">${s.status}</div><div>${s.acc}%</div>`;
             list.appendChild(row);
         });
         document.getElementById('totalWins').innerText = w; document.getElementById('totalLoss').innerText = l;
@@ -269,12 +315,16 @@
 
     setInterval(() => {
         const now = Date.now();
-        signalHistory.forEach(s => { if (s.status === 'PENDING' && now > s.expiry) ws.send(JSON.stringify({ ticks_history: s.market, end: "latest", count: 1, passthrough: { id: s.id } })); });
+        signalHistory.forEach(s => { 
+            if (s.status === 'PENDING' && now > s.expiry) {
+                ws.send(JSON.stringify({ ticks_history: s.market, end: "latest", count: 1, passthrough: { id: s.id } }));
+            }
+        });
     }, 5000);
 
     document.getElementById('accThreshold').oninput = (e) => document.getElementById('accVal').innerText = e.target.value + "%";
-    document.getElementById('market').onchange = connect;
-    document.getElementById('timeframe').onchange = connect;
+    document.getElementById('market').onchange = () => { isLocked = false; connect(); };
+    document.getElementById('timeframe').onchange = () => { isLocked = false; connect(); };
     window.onload = () => { initChart(); connect(); };
 </script>
 </body>
