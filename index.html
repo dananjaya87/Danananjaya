@@ -26,7 +26,6 @@
         label { font-size: 10px; color: #848d97; font-weight: bold; margin-bottom: 5px; display: block; }
         select { width: 100%; padding: 8px; border-radius: 5px; background: #161b22; color: var(--green); border: 1px solid #30363d; font-size: 12px; margin-bottom: 5px; }
 
-        /* SMC Indicator Panel */
         .smc-indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         .ind-item { display: flex; justify-content: space-between; align-items: center; font-size: 10px; background: #161b22; padding: 4px 8px; border-radius: 4px; border: 1px solid #30363d; }
         .dot { height: 8px; width: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
@@ -144,14 +143,24 @@
     const APP_ID = "1089";
     let chart, candleSeries, ws, candles = [], signalHistory = [], lastSpoken = "";
     let isLocked = false, lockEndTime = 0;
+    
+    // SMC Global variables for Lines
+    let currentPriceLines = [];
+    let trendLineHighs, trendLineLows;
 
     function initChart() {
         chart = LightweightCharts.createChart(document.getElementById('chart'), {
             layout: { background: { color: '#0d1117' }, textColor: '#cbd5e1' },
             grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-            timeScale: { timeVisible: true }
+            timeScale: { timeVisible: true },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
         });
         candleSeries = chart.addCandlestickSeries({ upColor: '#00ff88', downColor: '#ff4d4d' });
+        
+        // Trendlines series
+        trendLineHighs = chart.addLineSeries({ color: 'rgba(255, 77, 77, 0.4)', lineWidth: 1 });
+        trendLineLows = chart.addLineSeries({ color: 'rgba(0, 255, 136, 0.4)', lineWidth: 1 });
+
         const saved = localStorage.getItem('janaka_v6_history');
         signalHistory = saved ? JSON.parse(saved) : [];
         renderHistory();
@@ -186,40 +195,35 @@
     function analyzeSMC() {
         if (candles.length < 100) return;
 
-        // --- 3 Minute Lock Logic ---
         const now = Date.now();
         if (isLocked) {
             if (now >= lockEndTime) {
                 isLocked = false;
                 document.getElementById('timerText').innerText = "";
-                resetIndicators();
             } else {
                 const remaining = Math.round((lockEndTime - now) / 1000);
                 document.getElementById('timerText').innerText = `SYSTEM LOCKED: ${remaining}s`;
-                return; // Indicator updates freeze during lock
             }
         }
 
         const last = candles[candles.length - 1], prev = candles[candles.length - 2], p3 = candles[candles.length - 3];
         
-        // --- 1. CURRENT TREND (EMA 50 Logic) ---
+        // --- 1. CURRENT TREND ---
         const last50 = candles.slice(-50);
         const avg50 = last50.reduce((a, b) => a + b.close, 0) / 50;
         const trend = last.close > avg50 ? "UPTREND" : "DOWNTREND";
         document.getElementById('trendText').innerText = trend;
         document.getElementById('trendText').style.color = trend === "UPTREND" ? "var(--green)" : "var(--red)";
 
-        // --- 2. SMC TECHNIQUES (5) ---
+        // --- 2. SMC Visual Logic (HH, HL, LL, LH, BOS, CHOCH, S/R) ---
+        drawSMCStructure();
+
+        // --- 3. Indicators ---
         const isOneColor = trend === "UPTREND" ? (last.close > last.open && prev.close > prev.open) : (last.close < last.open && prev.close < prev.open);
         const isEngulf = trend === "UPTREND" ? (last.close > prev.open && last.open < prev.close) : (last.close < prev.open && last.open > prev.close);
         const hasFVG = Math.abs(p3.high - last.low) > (last.close * 0.0001);
         const nearKeyLvl = last.close > Math.max(...candles.slice(-100, -10).map(c => c.high)) * 0.999;
         const hiddenOpen = Math.abs(last.open - prev.close) < (last.close * 0.00005);
-
-        // --- 3. EXTRA FACTS (3) ---
-        const hasBOS = trend === "UPTREND" ? (last.high > Math.max(...candles.slice(-30, -1).map(c => c.high))) : (last.low < Math.min(...candles.slice(-30, -1).map(c => c.low)));
-        const hasCHoCH = trend === "UPTREND" ? (last.close > Math.max(...candles.slice(-60, -30).map(c => c.high))) : (last.close < Math.min(...candles.slice(-60, -30).map(c => c.low)));
-        const hasTL = Math.random() > 0.8; // Simulated Trendline rejection
 
         // Update Dots
         updateDot('tech1', isOneColor);
@@ -227,27 +231,19 @@
         updateDot('tech3', nearKeyLvl);
         updateDot('tech4', hasFVG);
         updateDot('tech5', hiddenOpen);
-        updateDot('factBOS', hasBOS, true);
-        updateDot('factCH', hasCHoCH, true);
-        updateDot('factTL', hasTL, true);
 
-        // Scoring
+        // Scoring & Signal
         let score = 0;
         if (isOneColor) score += 10; if (isEngulf) score += 15; if (nearKeyLvl) score += 10; if (hasFVG) score += 10; if (hiddenOpen) score += 15;
-        if (hasBOS) score += 20; if (hasCHoCH) score += 10; if (hasTL) score += 10;
 
+        // Dummy check for Signal status in dots (already handled in drawSMCStructure)
         const threshold = parseInt(document.getElementById('accThreshold').value);
         const sigEl = document.getElementById('signalText');
 
-        // SIGNAL LOGIC: Must match Trend + Must have BOS/CHoCH + Score
-        const majorFact = hasBOS || hasCHoCH;
-        const correctDirection = (trend === "UPTREND" && last.close > last.open) || (trend === "DOWNTREND" && last.close < last.open);
-
-        if (score >= threshold && majorFact && correctDirection) {
+        if (score >= threshold && (trend === "UPTREND" && last.close > last.open || trend === "DOWNTREND" && last.close < last.open)) {
             const type = trend === "UPTREND" ? "BUY" : "SELL";
             sigEl.innerText = type + " SIGNAL";
             sigEl.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
-            
             triggerSignal(type, score);
         } else {
             sigEl.innerText = "WAITING FOR SMC..."; sigEl.style.color = "#848d97";
@@ -257,30 +253,100 @@
         document.getElementById('accuracyText').innerText = `ACCURACY: ${score}%`;
     }
 
+    // --- NEW: SMC Structure Drawing Function ---
+    function drawSMCStructure() {
+        let markers = [];
+        let pivotsH = [], pivotsL = [];
+        
+        // Detect Pivot Points (HH/LL/LH/HL)
+        for (let i = 5; i < candles.length - 5; i++) {
+            if (candles[i].high > candles[i-1].high && candles[i].high > candles[i+1].high && candles[i].high > candles[i-2].high && candles[i].high > candles[i+2].high) {
+                pivotsH.push({ time: candles[i].time, val: candles[i].high });
+            }
+            if (candles[i].low < candles[i-1].low && candles[i].low < candles[i+1].low && candles[i].low < candles[i-2].low && candles[i].low < candles[i+2].low) {
+                pivotsL.push({ time: candles[i].time, val: candles[i].low });
+            }
+        }
+
+        // Clear old Price Lines
+        currentPriceLines.forEach(l => candleSeries.removePriceLine(l));
+        currentPriceLines = [];
+
+        // Identify HH, HL, LL, LH and BOS/CHOCH
+        let lastHigh = 0, lastLow = 9999999, currentTrend = 'neutral';
+
+        // Highs Analysis
+        pivotsH.slice(-8).forEach((p, idx, arr) => {
+            let label = "HH";
+            if (idx > 0) {
+                if (p.val > arr[idx-1].val) {
+                    label = "HH";
+                    // Draw BOS line for HH
+                    const line = candleSeries.createPriceLine({
+                        price: p.val, color: 'rgba(0, 255, 136, 0.3)', lineWidth: 1, lineStyle: 2, title: 'BOS'
+                    });
+                    currentPriceLines.push(line);
+                } else {
+                    label = "LH";
+                }
+            }
+            markers.push({ time: p.time, position: 'aboveBar', color: '#fff', shape: 'text', text: label });
+        });
+
+        // Lows Analysis
+        pivotsL.slice(-8).forEach((p, idx, arr) => {
+            let label = "LL";
+            if (idx > 0) {
+                if (p.val < arr[idx-1].val) {
+                    label = "LL";
+                    const line = candleSeries.createPriceLine({
+                        price: p.val, color: 'rgba(255, 77, 77, 0.3)', lineWidth: 1, lineStyle: 2, title: 'BOS'
+                    });
+                    currentPriceLines.push(line);
+                } else {
+                    label = "HL";
+                }
+            }
+            markers.push({ time: p.time, position: 'belowBar', color: '#fff', shape: 'text', text: label });
+        });
+
+        // CHOCH Detection (Recent structure break)
+        const lastCandle = candles[candles.length - 1];
+        const recentHighs = pivotsH.slice(-3);
+        const recentLows = pivotsL.slice(-3);
+        
+        if(recentHighs.length > 0 && lastCandle.close > recentHighs[recentHighs.length-1].val) {
+            markers.push({ time: lastCandle.time, position: 'aboveBar', color: 'var(--blue)', shape: 'arrowDown', text: 'CHOCH 🟢' });
+            updateDot('factCH', true, true);
+        } else { updateDot('factCH', false); }
+
+        if(recentLows.length > 0 && lastCandle.close < recentLows[recentLows.length-1].val) {
+            markers.push({ time: lastCandle.time, position: 'belowBar', color: 'var(--red)', shape: 'arrowUp', text: 'CHOCH 🔴' });
+            updateDot('factBOS', true, false); // Re-using existing dots as requested
+        } else { updateDot('factBOS', false); }
+
+        // Draw Trendlines
+        if (pivotsH.length > 2) trendLineHighs.setData(pivotsH.slice(-5).map(p => ({ time: p.time, value: p.val })));
+        if (pivotsL.length > 2) trendLineLows.setData(pivotsL.slice(-5).map(p => ({ time: p.time, value: p.val })));
+
+        candleSeries.setMarkers(markers);
+    }
+
     function updateDot(id, active, isBlue = false) {
         const el = document.getElementById(id);
         if (active) el.className = isBlue ? 'dot active-blue' : 'dot active-green';
         else el.className = 'dot';
     }
 
-    function resetIndicators() {
-        const dots = document.querySelectorAll('.dot');
-        dots.forEach(d => d.className = 'dot');
-    }
-
     function triggerSignal(type, score) {
         if (isLocked) return;
-
-        // Start 3 Minute Lock
         isLocked = true;
         lockEndTime = Date.now() + (3 * 60 * 1000);
 
-        // Voice Alert
         if (document.getElementById('alarmToggle').checked) {
             const u = new SpeechSynthesisUtterance(`${type} Signal ${score} percent accuracy`);
             window.speechSynthesis.speak(u);
         }
-
         addHistory(type, score);
     }
 
