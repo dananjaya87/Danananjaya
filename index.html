@@ -3,219 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JANAKA SMC DASHBOARD V5 PRO</title>
+    <title>JANAKA ANALYTICS PRO V6</title>
+    <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #05070a;
-            --card-bg: #0d1117;
-            --border-color: #21262d;
-            --green: #00ff88;
-            --red: #ff4d4d;
-            --blue: #3b82f6;
-            --orange: #f39c12;
-            --purple: #a855f7;
-            --yellow: #eab308;
-            --text-main: #e6edf3;
+            --bg-main: #0a0e14;
+            --card-bg: #151b23;
+            --border: #30363d;
+            --accent-green: #00ffa3;
+            --accent-red: #ff4646;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --neon-glow: 0 0 15px rgba(0, 255, 163, 0.15);
         }
 
-        body { 
-            background: var(--bg-color); 
-            color: var(--text-main); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            padding: 10px; 
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
         }
 
-        .header-title {
-            text-align: center;
-            color: var(--green);
+        /* Header Design */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--neon-glow);
+        }
+
+        .brand {
             font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--accent-green), #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .top-bar {
+        /* Controls Area */
+        .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
-        .card { 
-            background: var(--card-bg); 
-            border: 1px solid var(--border-color); 
-            border-radius: 10px; 
-            padding: 12px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        .input-group {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
-        label { font-size: 10px; color: #848d97; font-weight: bold; margin-bottom: 5px; display: block; }
-        
-        select { 
-            width: 100%; padding: 8px; border-radius: 5px; 
-            background: #161b22; color: var(--green); border: 1px solid #30363d; 
-            font-weight: bold; outline: none; font-size: 12px;
+        label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
         }
 
-        .slider-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
-        input[type="range"] { flex: 1; accent-color: var(--green); cursor: pointer; }
-        .slider-val { font-size: 10px; color: var(--green); min-width: 25px; font-weight: bold; }
+        select {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            color: var(--accent-green);
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
 
-        #chart { height: 400px; width: 100%; border-radius: 8px; overflow: hidden; }
-
-        .stats-grid {
+        /* Main Chart Area */
+        .main-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .stat-box { 
-            background: var(--card-bg); padding: 10px; border-radius: 8px; 
-            border: 1px solid var(--border-color); text-align: center;
-        }
-        .stat-box span { display: block; font-size: 9px; color: #848d97; text-transform: uppercase; margin-bottom: 3px; }
-        .stat-box b { font-size: 13px; }
-
-        .signal-box {
-            background: linear-gradient(145deg, #161b22, #0d1117);
-            padding: 15px; border-radius: 12px; text-align: center;
-            border: 2px solid var(--border-color); margin-top: 10px;
-        }
-        #signalText { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
-        .accuracy-bar-bg { height: 6px; background: #30363d; border-radius: 3px; margin-top: 10px; width: 60%; margin-left: 20%; }
-        #accuracyFill { height: 100%; width: 0%; background: var(--green); border-radius: 3px; transition: width 0.5s; }
-
-        /* --- NEW SMC TECHNIQUES PANEL (IMAGE BASED) --- */
-        .strategy-panel {
-            margin-top: 15px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 300px;
             gap: 15px;
         }
 
-        .tech-card {
-            background: #0d1117;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+        #chart {
+            height: 500px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Stats Sidebar */
+        .stats-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
             padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
         }
 
-        .tech-title {
-            font-size: 14px; font-weight: bold; color: var(--yellow);
-            margin-bottom: 12px; border-bottom: 1px solid #30363d; padding-bottom: 5px;
+        .stat-card span { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
+        .stat-card b { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .val-up { color: var(--accent-green) !important; }
+        .val-down { color: var(--accent-red) !important; }
+
+        /* Market Status Bar */
+        .status-bar {
+            margin-top: 15px;
+            background: rgba(0, 255, 163, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 163, 0.2);
         }
 
-        .tech-item {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 12px; padding: 7px 0; border-bottom: 1px solid #161b22;
+        .status-text { font-size: 14px; font-weight: 600; color: var(--accent-green); letter-spacing: 1px; }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
         }
-
-        .tech-status {
-            font-size: 9px; padding: 2px 8px; border-radius: 4px;
-            background: #161b22; color: #848d97; font-weight: bold;
-        }
-
-        .active-green { background: rgba(0, 255, 136, 0.2); color: var(--green); border: 1px solid var(--green); }
-        .active-red { background: rgba(255, 77, 77, 0.2); color: var(--red); border: 1px solid var(--red); }
-        .active-blue { background: rgba(59, 130, 246, 0.2); color: var(--blue); border: 1px solid var(--blue); }
-
-        .footer-note { font-size: 10px; color: #848d97; margin-top: 10px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-<div class="header-title">JANAKA SMC DASHBOARD V5 PRO</div>
+<div class="top-nav">
+    <div class="brand">JANAKA ANALYTICS PRO V6</div>
+    <div id="liveTime" style="font-size: 14px; color: var(--text-secondary);">00:00:00</div>
+</div>
 
-<div class="top-bar">
-    <div class="card">
-        <label>MARKET SETTINGS</label>
-        <select id="market">
-            <option value="R_100">Volatility 100 Index</option>
-            <option value="R_75">Volatility 75 Index</option>
-            <option value="frxEURUSD">EUR/USD</option>
-            <option value="frxXAUUSD">Gold (XAU/USD)</option>
-        </select>
-        <select id="timeframe">
-            <option value="60">1M (Scalping)</option>
-            <option value="300">5M (Intraday)</option>
+<div class="controls">
+    <div class="input-group">
+        <label>Market Asset</label>
+        <select id="marketSelect">
+            <optgroup label="Volatility Indices">
+                <option value="R_100">Volatility 100 Index</option>
+                <option value="R_75">Volatility 75 Index</option>
+                <option value="R_50">Volatility 50 Index</option>
+                <option value="R_25">Volatility 25 Index</option>
+                <option value="1HZ100V">Volatility 100 (1s)</option>
+            </optgroup>
+            <optgroup label="Forex">
+                <option value="frxEURUSD">EUR/USD</option>
+                <option value="frxGBPUSD">GBP/USD</option>
+                <option value="frxUSDJPY">USD/JPY</option>
+            </optgroup>
         </select>
     </div>
-
-    <div class="card">
-        <label>ALARM & ACCURACY</label>
-        <div class="slider-row">
-            <input type="range" id="accThreshold" min="20" max="100" value="50">
-            <span class="slider-val" id="accVal">50%</span>
-        </div>
-        <div class="slider-row">
-            <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.8">
-            <span class="slider-val" id="volVal">80%</span>
-        </div>
-    </div>
-
-    <div class="card">
-        <label>MULTI-TIME MONITOR</label>
-        <div style="display: flex; justify-content: space-around; font-size: 11px; font-weight: bold;">
-            <div>M1: <span id="trendM1" class="val-g">--</span></div>
-            <div>M5: <span id="trendM5" class="val-g">--</span></div>
-            <div>Zone: <span id="pZone" style="color:var(--yellow)">--</span></div>
-        </div>
+    <div class="input-group">
+        <label>Timeframe</label>
+        <select id="tfSelect">
+            <option value="60">1 Minute (Scalping)</option>
+            <option value="300">5 Minutes (Intraday)</option>
+            <option value="900">15 Minutes (Swing)</option>
+        </select>
     </div>
 </div>
 
-<div class="card" style="padding: 5px;">
+<div class="main-container">
     <div id="chart"></div>
-</div>
-
-<div class="stats-grid">
-    <div class="stat-box"><span>1M TREND</span><br><b id="trendText" style="color:var(--green)">--</b></div>
-    <div class="stat-box"><span>ORDER BLOCK</span><br><b id="obText" style="color:var(--yellow)">WAITING</b></div>
-    <div class="stat-box"><span>FVG / GAP</span><br><b id="fvgText" style="color:var(--purple)">CLEAR</b></div>
-    <div class="stat-box"><span>LIQUIDITY</span><br><b id="liqText" style="color:var(--blue)">STABLE</b></div>
-    <div class="stat-box"><span>SUPPORT</span><br><b id="supPrice" style="color:var(--green)">0.00</b></div>
-    <div class="stat-box"><span>RESISTANCE</span><br><b id="resPrice" style="color:var(--red)">0.00</b></div>
-    <div class="stat-box"><span>EQUILIBRIUM</span><br><b id="eqPrice" style="color:#848d97">0.00</b></div>
-    <div class="stat-box"><span>CANDLE CONF.</span><br><b id="candConf" style="color:var(--green)">--</b></div>
-</div>
-
-<div class="signal-box">
-    <div id="signalText" style="color: #848d97;">ANALYZING TECHNIQUES...</div>
-    <div id="accuracyText" style="font-size: 12px; margin-top: 5px;">ACCURACY: 0%</div>
-    <div class="accuracy-bar-bg"><div id="accuracyFill"></div></div>
-</div>
-
-<!-- SMC STRATEGY AREA (NEW) -->
-<div class="strategy-panel">
-    <div class="tech-card">
-        <div class="tech-title">1. INTRODUCE 5 TECHNIQUES</div>
-        <div class="tech-item">1. One colour candles current direction <span id="t1" class="tech-status">CHECKING</span></div>
-        <div class="tech-item">2. Properly read engulfing <span id="t2" class="tech-status">CHECKING</span></div>
-        <div class="tech-item">3. Key levels <span id="t3" class="tech-status">CHECKING</span></div>
-        <div class="tech-item">4. FVG (Fair Value Gap) <span id="t4" class="tech-status">CHECKING</span></div>
-        <div class="tech-item">5. Hidden open point <span id="t5" class="tech-status">CHECKING</span></div>
-    </div>
-
-    <div class="tech-card">
-        <div class="tech-title" style="color: var(--blue);">3. EFFECT OTHER FACTS</div>
-        <div class="tech-item">1. BOS (Break of Structure) <span id="f1" class="tech-status">WAITING</span></div>
-        <div class="tech-item">2. CHoCH (Change of Character) <span id="f2" class="tech-status">WAITING</span></div>
-        <div class="tech-item">3. Trend Lines Support <span id="f3" class="tech-status">STABLE</span></div>
-        <div class="footer-note">
-            Technique එක ප්‍රමාණවත් නොවේ මේ facts එකක් හෝ කිහිපයක් තිබීම අනිවාර්ය වේ.
+    
+    <div class="stats-sidebar">
+        <div class="stat-card">
+            <span>LIVE PRICE</span>
+            <b id="livePrice">0.0000</b>
+        </div>
+        <div class="stat-card">
+            <span>24H HIGH</span>
+            <b id="maxPrice">0.0000</b>
+        </div>
+        <div class="stat-card">
+            <span>24H LOW</span>
+            <b id="minPrice">0.0000</b>
+        </div>
+        <div class="stat-card">
+            <span>MARKET TREND</span>
+            <b id="trendLabel">ANALYZING...</b>
         </div>
     </div>
+</div>
+
+<div class="status-bar">
+    <span class="status-text">SYSTEM STATUS: <span id="connStatus">CONNECTING TO DERIV API...</span></span>
 </div>
 
 <script>
     const APP_ID = "1089";
-    let chart, candleSeries, ws, candles = [];
-    let currentMarket = "R_100";
-    let currentTimeframe = 60;
-    let lastSpokenSignal = "";
+    let chart, candleSeries, ws;
+    let candles = [];
+    let currentAsset = "R_100";
+    let currentTF = "60";
 
+    // Chart Initialization
     function initChart() {
-        chart = Light
+        const chartElement = document.getElementById('chart');
+        chart = LightweightCharts.createChart(chartElement, {
+            layout: {
+                background: { color: '#151b23' },
+                textColor: '#8b949e',
+                fontSize: 12,
+                fontFamily: 'Inter',
+            },
+            grid: {
+                vertLines: { color: '#21262d' },
+                horzLines: { color: '#21262d' },
+            },
+            rightPriceScale: {
+                borderColor: '#30363d',
+            },
+            timeScale: {
+                borderColor: '#30363d',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+        });
+
+        candleSeries = chart.addCandlestickSeries({
+            upColor: '#00ffa3',
+            downColor: '#ff4646',
+            borderVisible: false,
+            wickUpColor: '#00ffa3',
+            wickDownColor: '#ff4646',
+        });
+
+        // Auto-resize chart
+        new ResizeObserver(entries => {
+            if (entries.length === 0 || !entries[0].contentRect) return;
+            const { width, height } = entries[0].contentRect;
+            chart.applyOptions({ width, height });
+        }).observe(chartElement);
+    }
+
+    function connect() {
+        if (ws) ws.close();
+        
+        ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
+        
+        ws.onopen = () => {
+            document.getElementById('connStatus').innerText = "LIVE DATA CONNECTED";
+            document.getElementById('connStatus').style.color = "var(--accent-green)";
+            
+            // Initial Data Request
+            ws.send(JSON.stringify({
+                ticks_history: currentAsset,
+                end: "latest",
+                style: "candles",
+                granularity: parseInt(currentTF),
+                count: 500,
+                subscribe: 1
+            }));
+        };
+
+        ws.onmessage = (msg) => {
+            const data = JSON.parse(msg.data);
+
+            if (data.candles) {
+                candles = data.candles.map(c => ({
+                    time: c.epoch,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close
+                }));
+                candleSeries.setData(candles);
+                updateStats();
+            }
+
+            if (data.ohlc) {
+                const o = data.ohlc;
+                const newCandle = {
+                    time: o.open_time,
+                    open: parseFloat(o.open),
+                    high: parseFloat(o.high),
+                    low: parseFloat(o.low),
+                    close: parseFloat(o.close)
+                };
+
+                // Memory Leak Fix: Limit candles array to 1000
+                if (candles.length > 0 && candles[candles.length - 1].time === newCandle.time) {
+                    candles[candles.length - 1] = newCandle;
+                } else {
+                    candles.push(newCandle);
+                    if (candles.length > 1000) candles.shift(); 
+                }
+
+                candleSeries.update(newCandle);
+                updateLivePrice(newCandle.close);
+            }
+        };
+
+        ws.onclose = () => {
+            document.getElementById('connStatus').innerText = "RECONNECTING...";
+            document.getElementById('connStatus').style.color = "var(--accent-red)";
+            setTimeout(connect, 3000);
+        };
+    }
+
+    function updateLivePrice(price) {
+        const priceEl = document.getElementById('livePrice');
+        const lastPrice = parseFloat(priceEl.innerText);
+        const dec = currentAsset.includes('frx') ? 5 : 2;
+        
+        priceEl.innerText = price.toFixed(dec);
+        priceEl.className = price >= lastPrice ? 'val-up' : 'val-down';
+        
+        updateStats();
+    }
+
+    function updateStats() {
+        if (candles.length < 2) return;
+        
+        const dec = currentAsset.includes('frx') ? 5 : 2;
+        const prices = candles.slice(-50).map(c => c.close);
+        const max = Math.max(...candles.map(c => c.high));
+        const min = Math.min(...candles.map(c => c.low));
+        const current = candles[candles.length - 1].close;
+        const previous = candles[candles.length - 2].close;
+
+        document.getElementById('maxPrice').innerText = max.toFixed(dec);
+        document.getElementById('minPrice').innerText = min.toFixed(dec);
+        
+        const trendLabel = document.getElementById('trendLabel');
+        if (current > previous) {
+            trendLabel.innerText = "BULLISH ↑";
+            trendLabel.className = "val-up";
+        } else {
+            trendLabel.innerText = "BEARISH ↓";
+            trendLabel.className = "val-down";
+        }
+    }
+
+    // Time update
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('liveTime').innerText = now.toLocaleTimeString();
+    }, 1000);
+
+    // Select Event Listeners
+    document.getElementById('marketSelect').addEventListener('change', (e) => {
+        currentAsset = e.target.value;
+        candles = [];
+        candleSeries.setData([]);
+        connect();
+    });
+
+    document.getElementById('tfSelect').addEventListener('change', (e) => {
+        currentTF = e.target.value;
+        candles = [];
+        candleSeries.setData([]);
+        connect();
+    });
+
+    window.onload = () => {
+        initChart();
+        connect();
+    };
+</script>
+
+</body>
+</html>
