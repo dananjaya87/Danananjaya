@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JANAKA SMC DASHBOARD V6 PRO - TREND MASTER</title>
+    <title>JANAKA SMC DASHBOARD V5 PRO</title>
     <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         :root {
@@ -13,79 +13,131 @@
             --green: #00ff88;
             --red: #ff4d4d;
             --blue: #3b82f6;
-            --yellow: #ffd700;
+            --orange: #f39c12;
+            --purple: #a855f7;
+            --yellow: #eab308;
             --text-main: #e6edf3;
         }
 
-        body { background: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
-        .header-title { text-align: center; color: var(--green); font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+        }
 
-        .top-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px; }
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; }
+        .header-title {
+            text-align: center;
+            color: var(--green);
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .top-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 10px; 
+            padding: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
         label { font-size: 10px; color: #848d97; font-weight: bold; margin-bottom: 5px; display: block; }
-        select { width: 100%; padding: 8px; border-radius: 5px; background: #161b22; color: var(--green); border: 1px solid #30363d; font-size: 12px; margin-bottom: 5px; cursor: pointer; }
+        
+        select { 
+            width: 100%; padding: 8px; border-radius: 5px; 
+            background: #161b22; color: var(--green); border: 1px solid #30363d; 
+            font-weight: bold; outline: none; font-size: 12px;
+        }
 
-        .smc-indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
-        .ind-item { display: flex; justify-content: space-between; align-items: center; font-size: 10px; background: #161b22; padding: 4px 8px; border-radius: 4px; border: 1px solid #30363d; }
-        .dot { height: 8px; width: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
-        .dot.active-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
-        .dot.active-blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
-        .dot.active-yellow { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+        .slider-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+        input[type="range"] { flex: 1; accent-color: var(--green); cursor: pointer; }
+        .slider-val { font-size: 10px; color: var(--green); min-width: 25px; font-weight: bold; }
 
-        #chart { height: 450px; width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        #chart { height: 400px; width: 100%; border-radius: 8px; overflow: hidden; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .stat-box { background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
-        .stat-box span { display: block; font-size: 9px; color: #848d97; text-transform: uppercase; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
 
-        .signal-box { background: linear-gradient(145deg, #161b22, #0d1117); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--border-color); margin-top: 10px; position: relative; }
-        #signalText { font-size: 22px; font-weight: bold; letter-spacing: 2px; }
-        .accuracy-bar-bg { height: 6px; background: #30363d; border-radius: 3px; margin: 10px auto; width: 60%; overflow: hidden; }
-        #accuracyFill { height: 100%; width: 0%; background: var(--green); transition: width 0.5s ease-in-out; }
-        #timerText { font-size: 11px; color: var(--yellow); margin-top: 5px; font-weight: bold; }
+        .stat-box { 
+            background: var(--card-bg); padding: 10px; border-radius: 8px; 
+            border: 1px solid var(--border-color); text-align: center;
+        }
+        .stat-box span { display: block; font-size: 9px; color: #848d97; text-transform: uppercase; margin-bottom: 3px; }
+        .stat-box b { font-size: 13px; }
 
-        .history-card { margin-top: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
-        .history-list { max-height: 200px; overflow-y: auto; font-size: 11px; }
-        .history-item { display: grid; grid-template-columns: 0.8fr 1.2fr 1fr 1.2fr 1.2fr 0.8fr; padding: 10px 5px; border-bottom: 1px solid #161b22; text-align: center; }
+        .signal-box {
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            padding: 15px; border-radius: 12px; text-align: center;
+            border: 2px solid var(--border-color); margin-top: 10px;
+        }
+        #signalText { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
+        .accuracy-bar-bg { height: 6px; background: #30363d; border-radius: 3px; margin-top: 10px; width: 60%; margin-left: 20%; }
+        #accuracyFill { height: 100%; width: 0%; background: var(--green); border-radius: 3px; transition: width 0.5s; }
 
-        .switch { position: relative; width: 34px; height: 18px; display: inline-block; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #30363d; border-radius: 18px; }
-        .slider-toggle:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
-        input:checked + .slider-toggle { background-color: var(--green); }
-        input:checked + .slider-toggle:before { transform: translateX(16px); }
+        /* --- NEW SMC TECHNIQUES PANEL (IMAGE BASED) --- */
+        .strategy-panel {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
 
-        input[type=range] { width: 100%; margin: 10px 0; }
+        .tech-card {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .tech-title {
+            font-size: 14px; font-weight: bold; color: var(--yellow);
+            margin-bottom: 12px; border-bottom: 1px solid #30363d; padding-bottom: 5px;
+        }
+
+        .tech-item {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; padding: 7px 0; border-bottom: 1px solid #161b22;
+        }
+
+        .tech-status {
+            font-size: 9px; padding: 2px 8px; border-radius: 4px;
+            background: #161b22; color: #848d97; font-weight: bold;
+        }
+
+        .active-green { background: rgba(0, 255, 136, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .active-red { background: rgba(255, 77, 77, 0.2); color: var(--red); border: 1px solid var(--red); }
+        .active-blue { background: rgba(59, 130, 246, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+
+        .footer-note { font-size: 10px; color: #848d97; margin-top: 10px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-<div class="header-title">JANAKA SMC DASHBOARD V6 PRO</div>
+<div class="header-title">JANAKA SMC DASHBOARD V5 PRO</div>
 
 <div class="top-bar">
     <div class="card">
-        <label>MARKET SELECTION</label>
+        <label>MARKET SETTINGS</label>
         <select id="market">
-            <optgroup label="Volatility Indices">
-                <option value="R_10">Volatility 10</option>
-                <option value="R_25">Volatility 25</option>
-                <option value="R_50">Volatility 50</option>
-                <option value="R_75">Volatility 75</option>
-                <option value="R_100" selected>Volatility 100</option>
-                <option value="1HZ10V">Volatility 10 (1s)</option>
-                <option value="1HZ25V">Volatility 25 (1s)</option>
-                <option value="1HZ50V">Volatility 50 (1s)</option>
-                <option value="1HZ75V">Volatility 75 (1s)</option>
-                <option value="1HZ100V">Volatility 100 (1s)</option>
-            </optgroup>
-            <optgroup label="Jump Indices">
-                <option value="JD10">Jump 10</option>
-                <option value="JD25">Jump 25</option>
-                <option value="JD50">Jump 50</option>
-                <option value="JD75">Jump 75</option>
-                <option value="JD100">Jump 100</option>
-            </optgroup>
+            <option value="R_100">Volatility 100 Index</option>
+            <option value="R_75">Volatility 75 Index</option>
+            <option value="frxEURUSD">EUR/USD</option>
+            <option value="frxXAUUSD">Gold (XAU/USD)</option>
         </select>
         <select id="timeframe">
             <option value="60">1M (Scalping)</option>
@@ -94,306 +146,76 @@
     </div>
 
     <div class="card">
-        <label>ALARM & SETTINGS</label>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
-            <span style="font-size: 11px;">VOICE ALERT</span>
-            <label class="switch"><input type="checkbox" id="alarmToggle" checked><span class="slider-toggle"></span></label>
+        <label>ALARM & ACCURACY</label>
+        <div class="slider-row">
+            <input type="range" id="accThreshold" min="20" max="100" value="50">
+            <span class="slider-val" id="accVal">50%</span>
         </div>
-        <label>MIN ACCURACY: <span id="accVal" style="color:var(--green)">70%</span></label>
-        <input type="range" id="accThreshold" min="40" max="100" value="70">
+        <div class="slider-row">
+            <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.8">
+            <span class="slider-val" id="volVal">80%</span>
+        </div>
     </div>
 
     <div class="card">
-        <label>SMC TECHNIQUES (LIVE STATUS)</label>
-        <div class="smc-indicator-grid">
-            <div class="ind-item">Uptrend <div id="tech1" class="dot"></div></div>
-            <div class="ind-item">BOS <div id="factBOS" class="dot"></div></div>
-            <div class="ind-item">Engulf <div id="tech2" class="dot"></div></div>
-            <div class="ind-item">CHoCH <div id="factCH" class="dot"></div></div>
-            <div class="ind-item">Key Level <div id="tech3" class="dot"></div></div>
-            <div class="ind-item">S/R Zone <div id="factTL" class="dot"></div></div>
-            <div class="ind-item">FVG Gap <div id="tech4" class="dot"></div></div>
-            <div class="ind-item">Momentum <div id="tech5" class="dot"></div></div>
+        <label>MULTI-TIME MONITOR</label>
+        <div style="display: flex; justify-content: space-around; font-size: 11px; font-weight: bold;">
+            <div>M1: <span id="trendM1" class="val-g">--</span></div>
+            <div>M5: <span id="trendM5" class="val-g">--</span></div>
+            <div>Zone: <span id="pZone" style="color:var(--yellow)">--</span></div>
         </div>
     </div>
 </div>
 
-<div id="chart"></div>
+<div class="card" style="padding: 5px;">
+    <div id="chart"></div>
+</div>
 
 <div class="stats-grid">
-    <div class="stat-box"><span>TREND</span><br><b id="trendText">--</b></div>
-    <div class="stat-box"><span>STRUC. STATE</span><br><b id="strucState">STABLE</b></div>
-    <div class="stat-box"><span>S/R LEVEL</span><br><b id="srLevelText">--</b></div>
-    <div class="stat-box"><span>LIQUIDITY</span><br><b id="liqText">CALM</b></div>
+    <div class="stat-box"><span>1M TREND</span><br><b id="trendText" style="color:var(--green)">--</b></div>
+    <div class="stat-box"><span>ORDER BLOCK</span><br><b id="obText" style="color:var(--yellow)">WAITING</b></div>
+    <div class="stat-box"><span>FVG / GAP</span><br><b id="fvgText" style="color:var(--purple)">CLEAR</b></div>
+    <div class="stat-box"><span>LIQUIDITY</span><br><b id="liqText" style="color:var(--blue)">STABLE</b></div>
+    <div class="stat-box"><span>SUPPORT</span><br><b id="supPrice" style="color:var(--green)">0.00</b></div>
+    <div class="stat-box"><span>RESISTANCE</span><br><b id="resPrice" style="color:var(--red)">0.00</b></div>
+    <div class="stat-box"><span>EQUILIBRIUM</span><br><b id="eqPrice" style="color:#848d97">0.00</b></div>
+    <div class="stat-box"><span>CANDLE CONF.</span><br><b id="candConf" style="color:var(--green)">--</b></div>
 </div>
 
 <div class="signal-box">
-    <div id="signalText" style="color: #848d97;">SCANNING SMC STRUCTURE...</div>
+    <div id="signalText" style="color: #848d97;">ANALYZING TECHNIQUES...</div>
+    <div id="accuracyText" style="font-size: 12px; margin-top: 5px;">ACCURACY: 0%</div>
     <div class="accuracy-bar-bg"><div id="accuracyFill"></div></div>
-    <div id="accuracyText" style="font-size: 12px; font-weight: bold;">ACCURACY: 0%</div>
-    <div id="timerText"></div>
 </div>
 
-<div class="history-card">
-    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <b style="color:var(--blue)">SIGNAL HISTORY</b>
-        <span style="font-size:10px;">Wins: <b id="totalWins" style="color:var(--green)">0</b> | Loss: <b id="totalLoss" style="color:var(--red)">0</b></span>
+<!-- SMC STRATEGY AREA (NEW) -->
+<div class="strategy-panel">
+    <div class="tech-card">
+        <div class="tech-title">1. INTRODUCE 5 TECHNIQUES</div>
+        <div class="tech-item">1. One colour candles current direction <span id="t1" class="tech-status">CHECKING</span></div>
+        <div class="tech-item">2. Properly read engulfing <span id="t2" class="tech-status">CHECKING</span></div>
+        <div class="tech-item">3. Key levels <span id="t3" class="tech-status">CHECKING</span></div>
+        <div class="tech-item">4. FVG (Fair Value Gap) <span id="t4" class="tech-status">CHECKING</span></div>
+        <div class="tech-item">5. Hidden open point <span id="t5" class="tech-status">CHECKING</span></div>
     </div>
-    <div id="historyList" class="history-list"></div>
+
+    <div class="tech-card">
+        <div class="tech-title" style="color: var(--blue);">3. EFFECT OTHER FACTS</div>
+        <div class="tech-item">1. BOS (Break of Structure) <span id="f1" class="tech-status">WAITING</span></div>
+        <div class="tech-item">2. CHoCH (Change of Character) <span id="f2" class="tech-status">WAITING</span></div>
+        <div class="tech-item">3. Trend Lines Support <span id="f3" class="tech-status">STABLE</span></div>
+        <div class="footer-note">
+            Technique එක ප්‍රමාණවත් නොවේ මේ facts එකක් හෝ කිහිපයක් තිබීම අනිවාර්ය වේ.
+        </div>
+    </div>
 </div>
 
 <script>
     const APP_ID = "1089";
-    let chart, candleSeries, ws, candles = [], signalHistory = [];
-    let isLocked = false, lockEndTime = 0;
-    
+    let chart, candleSeries, ws, candles = [];
+    let currentMarket = "R_100";
+    let currentTimeframe = 60;
+    let lastSpokenSignal = "";
+
     function initChart() {
-        chart = LightweightCharts.createChart(document.getElementById('chart'), {
-            layout: { background: { color: '#0d1117' }, textColor: '#cbd5e1' },
-            grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-            timeScale: { timeVisible: true, borderColor: '#30363d' },
-            rightPriceScale: { borderColor: '#30363d' },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
-        });
-        candleSeries = chart.addCandlestickSeries({ 
-            upColor: '#00ff88', downColor: '#ff4d4d', 
-            borderVisible: false, wickUpColor: '#00ff88', wickDownColor: '#ff4d4d' 
-        });
-
-        const saved = localStorage.getItem('janaka_v6_history');
-        signalHistory = saved ? JSON.parse(saved) : [];
-        renderHistory();
-    }
-
-    function connect() {
-        if (ws) ws.close();
-        ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
-        ws.onopen = () => {
-            const m = document.getElementById('market').value;
-            const t = document.getElementById('timeframe').value;
-            ws.send(JSON.stringify({ 
-                ticks_history: m, end: "latest", style: "candles", 
-                granularity: parseInt(t), count: 500, subscribe: 1 
-            }));
-        };
-        ws.onmessage = (msg) => {
-            const data = JSON.parse(msg.data);
-            if (data.candles) {
-                candles = data.candles.map(c => ({ time: c.epoch, open: c.open, high: c.high, low: c.low, close: c.close }));
-                candleSeries.setData(candles);
-                analyzeSMC();
-            }
-            if (data.ohlc) {
-                const o = data.ohlc;
-                const newC = { time: o.open_time, open: o.open, high: o.high, low: o.low, close: o.close };
-                if (candles.length > 0 && candles[candles.length - 1].time === newC.time) candles[candles.length - 1] = newC;
-                else candles.push(newC);
-                candleSeries.update(newC);
-                analyzeSMC();
-            }
-            if (data.history && data.passthrough) checkResult(data.passthrough.id, data.history.prices[0]);
-        };
-    }
-
-    function analyzeSMC() {
-        if (candles.length < 50) return;
-
-        const now = Date.now();
-        if (isLocked) {
-            if (now >= lockEndTime) {
-                isLocked = false;
-                document.getElementById('timerText').innerText = "";
-            } else {
-                const remaining = Math.round((lockEndTime - now) / 1000);
-                document.getElementById('timerText').innerText = `NEXT SIGNAL READY IN: ${remaining}s`;
-            }
-        }
-
-        const last = candles[candles.length - 1];
-        const last50 = candles.slice(-50);
-        const avg = last50.reduce((a, b) => a + b.close, 0) / 50;
-        const trend = last.close > avg ? "UPTREND" : "DOWNTREND";
-        
-        document.getElementById('trendText').innerText = trend;
-        document.getElementById('trendText').style.color = trend === "UPTREND" ? "var(--green)" : "var(--red)";
-
-        // Structure Analysis & Marking
-        drawCleanStructure();
-
-        // Technique Dots
-        const isBullish = last.close > last.open;
-        const isEngulf = Math.abs(last.close - last.open) > Math.abs(candles[candles.length-2].close - candles[candles.length-2].open);
-        
-        updateDot('tech1', trend === "UPTREND");
-        updateDot('tech2', isEngulf);
-        updateDot('tech5', Math.abs(last.close - last.open) > (avg * 0.001));
-
-        // Signal Logic
-        let score = 65; // Base score
-        if (trend === "UPTREND" && isBullish) score += 15;
-        if (trend === "DOWNTREND" && !isBullish) score += 15;
-        if (isEngulf) score += 10;
-
-        const threshold = parseInt(document.getElementById('accThreshold').value);
-        const sigEl = document.getElementById('signalText');
-
-        if (score >= threshold && !isLocked) {
-            const type = trend === "UPTREND" ? "BUY" : "SELL";
-            sigEl.innerText = type + " SIGNAL DETECTED";
-            sigEl.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
-            triggerSignal(type, score);
-        } else if (!isLocked) {
-            sigEl.innerText = "WAITING FOR SMC SETUP...";
-            sigEl.style.color = "#848d97";
-        }
-
-        document.getElementById('accuracyFill').style.width = score + "%";
-        document.getElementById('accuracyText').innerText = `ACCURACY: ${score}%`;
-    }
-
-    function drawCleanStructure() {
-        let markers = [];
-        const lookback = 10;
-        let lastHigh = 0, lastLow = Infinity;
-        let lastHH = 0, lastLL = Infinity;
-
-        // 1. Detect Major Swings (HH, HL, LH, LL)
-        for (let i = lookback; i < candles.length - 5; i++) {
-            const current = candles[i];
-            const range = candles.slice(i - lookback, i + 5);
-            const isHigh = range.every(c => current.high >= c.high);
-            const isLow = range.every(c => current.low <= c.low);
-
-            if (isHigh) {
-                let label = current.high > lastHigh ? "HH" : "LH";
-                let color = current.high > lastHigh ? 'var(--green)' : 'var(--red)';
-                markers.push({ time: current.time, position: 'aboveBar', color: color, shape: 'text', text: label });
-                lastHigh = current.high;
-            }
-            if (isLow) {
-                let label = current.low < lastLow ? "LL" : "HL";
-                let color = current.low < lastLow ? 'var(--red)' : 'var(--green)';
-                markers.push({ time: current.time, position: 'belowBar', color: color, shape: 'text', text: label });
-                lastLow = current.low;
-            }
-        }
-
-        // 2. Identify BOS & CHOCH (With localized Markers/Arrows, NO LONG LINES)
-        const recent = candles.slice(-20);
-        let bosDetected = false, chochDetected = false;
-
-        for (let j = 1; j < recent.length; j++) {
-            // BOS Uptrend (Break HH)
-            if (recent[j].close > lastHigh && !bosDetected) {
-                markers.push({ time: recent[j].time, position: 'aboveBar', color: 'var(--blue)', shape: 'arrowDown', text: 'BOS ↑' });
-                bosDetected = true;
-                updateDot('factBOS', true, true);
-            }
-            // CHOCH (Reversal)
-            if (recent[j].close < lastLow && lastHigh > 0 && !chochDetected) {
-                markers.push({ time: recent[j].time, position: 'belowBar', color: 'var(--yellow)', shape: 'arrowUp', text: 'CHOCH ⚡' });
-                chochDetected = true;
-                updateDot('factCH', true, false);
-                document.getElementById('factCH').className = 'dot active-yellow';
-            }
-        }
-
-        if(!bosDetected) updateDot('factBOS', false);
-        if(!chochDetected) updateDot('factCH', false);
-
-        candleSeries.setMarkers(markers);
-    }
-
-    function updateDot(id, active, isBlue = false) {
-        const el = document.getElementById(id);
-        if (active) el.className = isBlue ? 'dot active-blue' : 'dot active-green';
-        else el.className = 'dot';
-    }
-
-    function triggerSignal(type, score) {
-        if (isLocked) return;
-        isLocked = true;
-        lockEndTime = Date.now() + (2 * 60 * 1000); // 2 min lock
-
-        if (document.getElementById('alarmToggle').checked) {
-            const u = new SpeechSynthesisUtterance(`${type} Signal confirmed with ${score} percent accuracy`);
-            window.speechSynthesis.speak(u);
-        }
-        addHistory(type, score);
-    }
-
-    function addHistory(type, acc) {
-        const entryPrice = candles[candles.length-1].close;
-        const item = { 
-            id: Date.now(), 
-            time: new Date().toLocaleTimeString(), 
-            market: document.getElementById('market').value, 
-            type, entry: entryPrice, acc, 
-            status: 'PENDING', 
-            expiry: Date.now() + 120000 
-        };
-        signalHistory.unshift(item);
-        if(signalHistory.length > 50) signalHistory.pop();
-        localStorage.setItem('janaka_v6_history', JSON.stringify(signalHistory));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList'); 
-        list.innerHTML = "";
-        let wins = 0, losses = 0;
-        signalHistory.forEach(s => {
-            if (s.status === 'WIN') wins++;
-            if (s.status === 'LOSS') losses++;
-            const row = document.createElement('div');
-            row.className = 'history-item';
-            row.innerHTML = `
-                <div>${s.time}</div>
-                <div>${s.market.replace('R_','Vol ')}</div>
-                <div style="color:${s.type==='BUY'?'var(--green)':'var(--red)'}; font-weight:bold">${s.type}</div>
-                <div>${s.entry.toFixed(2)}</div>
-                <div style="color:${s.status==='WIN'?'var(--green)':'var(--red)'}">${s.status}</div>
-                <div>${s.acc}%</div>
-            `;
-            list.appendChild(row);
-        });
-        document.getElementById('totalWins').innerText = wins;
-        document.getElementById('totalLoss').innerText = losses;
-    }
-
-    function checkResult(id, currentPrice) {
-        const s = signalHistory.find(x => x.id === id);
-        if (s && s.status === 'PENDING') {
-            s.status = s.type === 'BUY' ? (currentPrice > s.entry ? 'WIN' : 'LOSS') : (currentPrice < s.entry ? 'WIN' : 'LOSS');
-            localStorage.setItem('janaka_v6_history', JSON.stringify(signalHistory));
-            renderHistory();
-        }
-    }
-
-    setInterval(() => {
-        const now = Date.now();
-        signalHistory.forEach(s => { 
-            if (s.status === 'PENDING' && now > s.expiry) {
-                ws.send(JSON.stringify({ ticks_history: s.market, end: "latest", count: 1, passthrough: { id: s.id } }));
-            }
-        });
-    }, 5000);
-
-    document.getElementById('accThreshold').oninput = (e) => {
-        document.getElementById('accVal').innerText = e.target.value + "%";
-    };
-
-    document.getElementById('market').onchange = () => { isLocked = false; connect(); };
-    document.getElementById('timeframe').onchange = () => { isLocked = false; connect(); };
-    
-    window.onload = () => { 
-        initChart(); 
-        connect(); 
-        // Resize chart on window change
-        window.addEventListener('resize', () => {
-            chart.applyOptions({ width: document.getElementById('chart').clientWidth });
-        });
-    };
-</script>
-</body>
-</html>
+        chart = Light
