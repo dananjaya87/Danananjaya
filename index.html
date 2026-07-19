@@ -25,7 +25,7 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 15px;
-            overflow-x: hidden;
+            overflow: hidden; /* Scroll එක පාලනය කිරීමට */
         }
 
         /* Header Design */
@@ -48,6 +48,13 @@
             background: linear-gradient(90deg, var(--accent-green), #00d2ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        #liveTime {
+            font-size: 28px; /* වෙලාව විශාල කර ඇත */
+            font-weight: 800;
+            color: var(--accent-green); /* කොළ පාට */
+            text-shadow: 0 0 10px rgba(0, 255, 163, 0.3);
         }
 
         /* Controls Area */
@@ -86,42 +93,20 @@
             cursor: pointer;
         }
 
-        /* Main Chart Area */
+        /* Main Chart Area - Side boxes removed, full width */
         .main-container {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 15px;
+            width: 100%;
         }
 
         #chart {
-            height: 500px;
+            height: 60vh; /* තිරයේ උසට අනුව වෙනස් වේ */
+            min-height: 500px;
             background: var(--card-bg);
             border-radius: 15px;
             border: 1px solid var(--border);
             overflow: hidden;
             position: relative;
         }
-
-        /* Stats Sidebar */
-        .stats-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-card span { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
-        .stat-card b { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-        .val-up { color: var(--accent-green) !important; }
-        .val-down { color: var(--accent-red) !important; }
 
         /* Market Status Bar */
         .status-bar {
@@ -135,16 +120,13 @@
 
         .status-text { font-size: 14px; font-weight: 600; color: var(--accent-green); letter-spacing: 1px; }
 
-        @media (max-width: 900px) {
-            .main-container { grid-template-columns: 1fr; }
-        }
     </style>
 </head>
 <body>
 
 <div class="top-nav">
     <div class="brand">JANAKA ANALYTICS PRO V6</div>
-    <div id="liveTime" style="font-size: 14px; color: var(--text-secondary);">00:00:00</div>
+    <div id="liveTime">00:00:00</div>
 </div>
 
 <div class="controls">
@@ -177,29 +159,10 @@
 
 <div class="main-container">
     <div id="chart"></div>
-    
-    <div class="stats-sidebar">
-        <div class="stat-card">
-            <span>LIVE PRICE</span>
-            <b id="livePrice">0.0000</b>
-        </div>
-        <div class="stat-card">
-            <span>24H HIGH</span>
-            <b id="maxPrice">0.0000</b>
-        </div>
-        <div class="stat-card">
-            <span>24H LOW</span>
-            <b id="minPrice">0.0000</b>
-        </div>
-        <div class="stat-card">
-            <span>MARKET TREND</span>
-            <b id="trendLabel">ANALYZING...</b>
-        </div>
-    </div>
 </div>
 
 <div class="status-bar">
-    <span class="status-text">SYSTEM STATUS: <span id="connStatus">CONNECTING TO DERIV API...</span></span>
+    <span class="status-text">SYSTEM STATUS: <span id="connStatus">CONNECTING...</span></span>
 </div>
 
 <script>
@@ -209,7 +172,6 @@
     let currentAsset = "R_100";
     let currentTF = "60";
 
-    // Chart Initialization
     function initChart() {
         const chartElement = document.getElementById('chart');
         chart = LightweightCharts.createChart(chartElement, {
@@ -223,17 +185,13 @@
                 vertLines: { color: '#21262d' },
                 horzLines: { color: '#21262d' },
             },
-            rightPriceScale: {
-                borderColor: '#30363d',
-            },
+            rightPriceScale: { borderColor: '#30363d' },
             timeScale: {
                 borderColor: '#30363d',
                 timeVisible: true,
                 secondsVisible: false,
             },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-            },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
         });
 
         candleSeries = chart.addCandlestickSeries({
@@ -244,7 +202,6 @@
             wickDownColor: '#ff4646',
         });
 
-        // Auto-resize chart
         new ResizeObserver(entries => {
             if (entries.length === 0 || !entries[0].contentRect) return;
             const { width, height } = entries[0].contentRect;
@@ -254,14 +211,12 @@
 
     function connect() {
         if (ws) ws.close();
-        
         ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
         
         ws.onopen = () => {
             document.getElementById('connStatus').innerText = "LIVE DATA CONNECTED";
             document.getElementById('connStatus').style.color = "var(--accent-green)";
             
-            // Initial Data Request
             ws.send(JSON.stringify({
                 ticks_history: currentAsset,
                 end: "latest",
@@ -284,7 +239,6 @@
                     close: c.close
                 }));
                 candleSeries.setData(candles);
-                updateStats();
             }
 
             if (data.ohlc) {
@@ -297,86 +251,10 @@
                     close: parseFloat(o.close)
                 };
 
-                // Memory Leak Fix: Limit candles array to 1000
                 if (candles.length > 0 && candles[candles.length - 1].time === newCandle.time) {
                     candles[candles.length - 1] = newCandle;
                 } else {
                     candles.push(newCandle);
                     if (candles.length > 1000) candles.shift(); 
                 }
-
                 candleSeries.update(newCandle);
-                updateLivePrice(newCandle.close);
-            }
-        };
-
-        ws.onclose = () => {
-            document.getElementById('connStatus').innerText = "RECONNECTING...";
-            document.getElementById('connStatus').style.color = "var(--accent-red)";
-            setTimeout(connect, 3000);
-        };
-    }
-
-    function updateLivePrice(price) {
-        const priceEl = document.getElementById('livePrice');
-        const lastPrice = parseFloat(priceEl.innerText);
-        const dec = currentAsset.includes('frx') ? 5 : 2;
-        
-        priceEl.innerText = price.toFixed(dec);
-        priceEl.className = price >= lastPrice ? 'val-up' : 'val-down';
-        
-        updateStats();
-    }
-
-    function updateStats() {
-        if (candles.length < 2) return;
-        
-        const dec = currentAsset.includes('frx') ? 5 : 2;
-        const prices = candles.slice(-50).map(c => c.close);
-        const max = Math.max(...candles.map(c => c.high));
-        const min = Math.min(...candles.map(c => c.low));
-        const current = candles[candles.length - 1].close;
-        const previous = candles[candles.length - 2].close;
-
-        document.getElementById('maxPrice').innerText = max.toFixed(dec);
-        document.getElementById('minPrice').innerText = min.toFixed(dec);
-        
-        const trendLabel = document.getElementById('trendLabel');
-        if (current > previous) {
-            trendLabel.innerText = "BULLISH ↑";
-            trendLabel.className = "val-up";
-        } else {
-            trendLabel.innerText = "BEARISH ↓";
-            trendLabel.className = "val-down";
-        }
-    }
-
-    // Time update
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('liveTime').innerText = now.toLocaleTimeString();
-    }, 1000);
-
-    // Select Event Listeners
-    document.getElementById('marketSelect').addEventListener('change', (e) => {
-        currentAsset = e.target.value;
-        candles = [];
-        candleSeries.setData([]);
-        connect();
-    });
-
-    document.getElementById('tfSelect').addEventListener('change', (e) => {
-        currentTF = e.target.value;
-        candles = [];
-        candleSeries.setData([]);
-        connect();
-    });
-
-    window.onload = () => {
-        initChart();
-        connect();
-    };
-</script>
-
-</body>
-</html>
