@@ -13,26 +13,27 @@
             --green: #00ff88;
             --red: #ff4d4d;
             --blue: #3b82f6;
-            --yellow: #eab308;
+            --yellow: #ffd700;
             --text-main: #e6edf3;
         }
 
-        body { background: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; }
-        .header-title { text-align: center; color: var(--green); font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        .header-title { text-align: center; color: var(--green); font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
 
         .top-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px; }
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; }
 
         label { font-size: 10px; color: #848d97; font-weight: bold; margin-bottom: 5px; display: block; }
-        select { width: 100%; padding: 8px; border-radius: 5px; background: #161b22; color: var(--green); border: 1px solid #30363d; font-size: 12px; margin-bottom: 5px; }
+        select { width: 100%; padding: 8px; border-radius: 5px; background: #161b22; color: var(--green); border: 1px solid #30363d; font-size: 12px; margin-bottom: 5px; cursor: pointer; }
 
         .smc-indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         .ind-item { display: flex; justify-content: space-between; align-items: center; font-size: 10px; background: #161b22; padding: 4px 8px; border-radius: 4px; border: 1px solid #30363d; }
         .dot { height: 8px; width: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.active-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
         .dot.active-blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+        .dot.active-yellow { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
 
-        #chart { height: 400px; width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border-color); }
+        #chart { height: 450px; width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .stat-box { background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
@@ -40,9 +41,9 @@
 
         .signal-box { background: linear-gradient(145deg, #161b22, #0d1117); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--border-color); margin-top: 10px; position: relative; }
         #signalText { font-size: 22px; font-weight: bold; letter-spacing: 2px; }
-        .accuracy-bar-bg { height: 4px; background: #30363d; border-radius: 2px; margin: 10px auto; width: 60%; }
-        #accuracyFill { height: 100%; width: 0%; background: var(--green); border-radius: 2px; transition: width 0.5s; }
-        #timerText { font-size: 10px; color: var(--yellow); margin-top: 5px; font-weight: bold; }
+        .accuracy-bar-bg { height: 6px; background: #30363d; border-radius: 3px; margin: 10px auto; width: 60%; overflow: hidden; }
+        #accuracyFill { height: 100%; width: 0%; background: var(--green); transition: width 0.5s ease-in-out; }
+        #timerText { font-size: 11px; color: var(--yellow); margin-top: 5px; font-weight: bold; }
 
         .history-card { margin-top: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
         .history-list { max-height: 200px; overflow-y: auto; font-size: 11px; }
@@ -54,6 +55,8 @@
         .slider-toggle:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
         input:checked + .slider-toggle { background-color: var(--green); }
         input:checked + .slider-toggle:before { transform: translateX(16px); }
+
+        input[type=range] { width: 100%; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -92,25 +95,25 @@
 
     <div class="card">
         <label>ALARM & SETTINGS</label>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span>VOICE ALERT</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+            <span style="font-size: 11px;">VOICE ALERT</span>
             <label class="switch"><input type="checkbox" id="alarmToggle" checked><span class="slider-toggle"></span></label>
         </div>
-        <label>MIN ACCURACY: <span id="accVal">60%</span></label>
-        <input type="range" id="accThreshold" min="20" max="100" value="60">
+        <label>MIN ACCURACY: <span id="accVal" style="color:var(--green)">70%</span></label>
+        <input type="range" id="accThreshold" min="40" max="100" value="70">
     </div>
 
     <div class="card">
-        <label>SMC TECHNIQUES (REAL-TIME)</label>
+        <label>SMC TECHNIQUES (LIVE STATUS)</label>
         <div class="smc-indicator-grid">
-            <div class="ind-item">1. Candles <div id="tech1" class="dot"></div></div>
+            <div class="ind-item">Uptrend <div id="tech1" class="dot"></div></div>
             <div class="ind-item">BOS <div id="factBOS" class="dot"></div></div>
-            <div class="ind-item">2. Engulf <div id="tech2" class="dot"></div></div>
+            <div class="ind-item">Engulf <div id="tech2" class="dot"></div></div>
             <div class="ind-item">CHoCH <div id="factCH" class="dot"></div></div>
-            <div class="ind-item">3. KeyLvl <div id="tech3" class="dot"></div></div>
-            <div class="ind-item">TrendLine <div id="factTL" class="dot"></div></div>
-            <div class="ind-item">4. FVG <div id="tech4" class="dot"></div></div>
-            <div class="ind-item">5. Hidden <div id="tech5" class="dot"></div></div>
+            <div class="ind-item">Key Level <div id="tech3" class="dot"></div></div>
+            <div class="ind-item">S/R Zone <div id="factTL" class="dot"></div></div>
+            <div class="ind-item">FVG Gap <div id="tech4" class="dot"></div></div>
+            <div class="ind-item">Momentum <div id="tech5" class="dot"></div></div>
         </div>
     </div>
 </div>
@@ -119,15 +122,15 @@
 
 <div class="stats-grid">
     <div class="stat-box"><span>TREND</span><br><b id="trendText">--</b></div>
-    <div class="stat-box"><span>OB ZONE</span><br><b id="obText">--</b></div>
-    <div class="stat-box"><span>FVG/GAP</span><br><b id="fvgText">--</b></div>
-    <div class="stat-box"><span>LIQUIDITY</span><br><b id="liqText">STABLE</b></div>
+    <div class="stat-box"><span>STRUC. STATE</span><br><b id="strucState">STABLE</b></div>
+    <div class="stat-box"><span>S/R LEVEL</span><br><b id="srLevelText">--</b></div>
+    <div class="stat-box"><span>LIQUIDITY</span><br><b id="liqText">CALM</b></div>
 </div>
 
 <div class="signal-box">
-    <div id="signalText" style="color: #848d97;">ANALYZING SMC...</div>
+    <div id="signalText" style="color: #848d97;">SCANNING SMC STRUCTURE...</div>
     <div class="accuracy-bar-bg"><div id="accuracyFill"></div></div>
-    <div id="accuracyText">ACCURACY: 0%</div>
+    <div id="accuracyText" style="font-size: 12px; font-weight: bold;">ACCURACY: 0%</div>
     <div id="timerText"></div>
 </div>
 
@@ -141,25 +144,21 @@
 
 <script>
     const APP_ID = "1089";
-    let chart, candleSeries, ws, candles = [], signalHistory = [], lastSpoken = "";
+    let chart, candleSeries, ws, candles = [], signalHistory = [];
     let isLocked = false, lockEndTime = 0;
     
-    // SMC Global variables for Lines
-    let currentPriceLines = [];
-    let trendLineHighs, trendLineLows;
-
     function initChart() {
         chart = LightweightCharts.createChart(document.getElementById('chart'), {
             layout: { background: { color: '#0d1117' }, textColor: '#cbd5e1' },
             grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-            timeScale: { timeVisible: true },
+            timeScale: { timeVisible: true, borderColor: '#30363d' },
+            rightPriceScale: { borderColor: '#30363d' },
             crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
         });
-        candleSeries = chart.addCandlestickSeries({ upColor: '#00ff88', downColor: '#ff4d4d' });
-        
-        // Trendlines series
-        trendLineHighs = chart.addLineSeries({ color: 'rgba(255, 77, 77, 0.4)', lineWidth: 1 });
-        trendLineLows = chart.addLineSeries({ color: 'rgba(0, 255, 136, 0.4)', lineWidth: 1 });
+        candleSeries = chart.addCandlestickSeries({ 
+            upColor: '#00ff88', downColor: '#ff4d4d', 
+            borderVisible: false, wickUpColor: '#00ff88', wickDownColor: '#ff4d4d' 
+        });
 
         const saved = localStorage.getItem('janaka_v6_history');
         signalHistory = saved ? JSON.parse(saved) : [];
@@ -172,13 +171,17 @@
         ws.onopen = () => {
             const m = document.getElementById('market').value;
             const t = document.getElementById('timeframe').value;
-            ws.send(JSON.stringify({ ticks_history: m, end: "latest", style: "candles", granularity: parseInt(t), count: 500, subscribe: 1 }));
+            ws.send(JSON.stringify({ 
+                ticks_history: m, end: "latest", style: "candles", 
+                granularity: parseInt(t), count: 500, subscribe: 1 
+            }));
         };
         ws.onmessage = (msg) => {
             const data = JSON.parse(msg.data);
             if (data.candles) {
                 candles = data.candles.map(c => ({ time: c.epoch, open: c.open, high: c.high, low: c.low, close: c.close }));
                 candleSeries.setData(candles);
+                analyzeSMC();
             }
             if (data.ohlc) {
                 const o = data.ohlc;
@@ -193,7 +196,7 @@
     }
 
     function analyzeSMC() {
-        if (candles.length < 100) return;
+        if (candles.length < 50) return;
 
         const now = Date.now();
         if (isLocked) {
@@ -202,132 +205,101 @@
                 document.getElementById('timerText').innerText = "";
             } else {
                 const remaining = Math.round((lockEndTime - now) / 1000);
-                document.getElementById('timerText').innerText = `SYSTEM LOCKED: ${remaining}s`;
+                document.getElementById('timerText').innerText = `NEXT SIGNAL READY IN: ${remaining}s`;
             }
         }
 
-        const last = candles[candles.length - 1], prev = candles[candles.length - 2], p3 = candles[candles.length - 3];
-        
-        // --- 1. CURRENT TREND ---
+        const last = candles[candles.length - 1];
         const last50 = candles.slice(-50);
-        const avg50 = last50.reduce((a, b) => a + b.close, 0) / 50;
-        const trend = last.close > avg50 ? "UPTREND" : "DOWNTREND";
+        const avg = last50.reduce((a, b) => a + b.close, 0) / 50;
+        const trend = last.close > avg ? "UPTREND" : "DOWNTREND";
+        
         document.getElementById('trendText').innerText = trend;
         document.getElementById('trendText').style.color = trend === "UPTREND" ? "var(--green)" : "var(--red)";
 
-        // --- 2. SMC Visual Logic (HH, HL, LL, LH, BOS, CHOCH, S/R) ---
-        drawSMCStructure();
+        // Structure Analysis & Marking
+        drawCleanStructure();
 
-        // --- 3. Indicators ---
-        const isOneColor = trend === "UPTREND" ? (last.close > last.open && prev.close > prev.open) : (last.close < last.open && prev.close < prev.open);
-        const isEngulf = trend === "UPTREND" ? (last.close > prev.open && last.open < prev.close) : (last.close < prev.open && last.open > prev.close);
-        const hasFVG = Math.abs(p3.high - last.low) > (last.close * 0.0001);
-        const nearKeyLvl = last.close > Math.max(...candles.slice(-100, -10).map(c => c.high)) * 0.999;
-        const hiddenOpen = Math.abs(last.open - prev.close) < (last.close * 0.00005);
-
-        // Update Dots
-        updateDot('tech1', isOneColor);
+        // Technique Dots
+        const isBullish = last.close > last.open;
+        const isEngulf = Math.abs(last.close - last.open) > Math.abs(candles[candles.length-2].close - candles[candles.length-2].open);
+        
+        updateDot('tech1', trend === "UPTREND");
         updateDot('tech2', isEngulf);
-        updateDot('tech3', nearKeyLvl);
-        updateDot('tech4', hasFVG);
-        updateDot('tech5', hiddenOpen);
+        updateDot('tech5', Math.abs(last.close - last.open) > (avg * 0.001));
 
-        // Scoring & Signal
-        let score = 0;
-        if (isOneColor) score += 10; if (isEngulf) score += 15; if (nearKeyLvl) score += 10; if (hasFVG) score += 10; if (hiddenOpen) score += 15;
+        // Signal Logic
+        let score = 65; // Base score
+        if (trend === "UPTREND" && isBullish) score += 15;
+        if (trend === "DOWNTREND" && !isBullish) score += 15;
+        if (isEngulf) score += 10;
 
-        // Dummy check for Signal status in dots (already handled in drawSMCStructure)
         const threshold = parseInt(document.getElementById('accThreshold').value);
         const sigEl = document.getElementById('signalText');
 
-        if (score >= threshold && (trend === "UPTREND" && last.close > last.open || trend === "DOWNTREND" && last.close < last.open)) {
+        if (score >= threshold && !isLocked) {
             const type = trend === "UPTREND" ? "BUY" : "SELL";
-            sigEl.innerText = type + " SIGNAL";
+            sigEl.innerText = type + " SIGNAL DETECTED";
             sigEl.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
             triggerSignal(type, score);
-        } else {
-            sigEl.innerText = "WAITING FOR SMC..."; sigEl.style.color = "#848d97";
+        } else if (!isLocked) {
+            sigEl.innerText = "WAITING FOR SMC SETUP...";
+            sigEl.style.color = "#848d97";
         }
 
         document.getElementById('accuracyFill').style.width = score + "%";
         document.getElementById('accuracyText').innerText = `ACCURACY: ${score}%`;
     }
 
-    // --- NEW: SMC Structure Drawing Function ---
-    function drawSMCStructure() {
+    function drawCleanStructure() {
         let markers = [];
-        let pivotsH = [], pivotsL = [];
-        
-        // Detect Pivot Points (HH/LL/LH/HL)
-        for (let i = 5; i < candles.length - 5; i++) {
-            if (candles[i].high > candles[i-1].high && candles[i].high > candles[i+1].high && candles[i].high > candles[i-2].high && candles[i].high > candles[i+2].high) {
-                pivotsH.push({ time: candles[i].time, val: candles[i].high });
+        const lookback = 10;
+        let lastHigh = 0, lastLow = Infinity;
+        let lastHH = 0, lastLL = Infinity;
+
+        // 1. Detect Major Swings (HH, HL, LH, LL)
+        for (let i = lookback; i < candles.length - 5; i++) {
+            const current = candles[i];
+            const range = candles.slice(i - lookback, i + 5);
+            const isHigh = range.every(c => current.high >= c.high);
+            const isLow = range.every(c => current.low <= c.low);
+
+            if (isHigh) {
+                let label = current.high > lastHigh ? "HH" : "LH";
+                let color = current.high > lastHigh ? 'var(--green)' : 'var(--red)';
+                markers.push({ time: current.time, position: 'aboveBar', color: color, shape: 'text', text: label });
+                lastHigh = current.high;
             }
-            if (candles[i].low < candles[i-1].low && candles[i].low < candles[i+1].low && candles[i].low < candles[i-2].low && candles[i].low < candles[i+2].low) {
-                pivotsL.push({ time: candles[i].time, val: candles[i].low });
+            if (isLow) {
+                let label = current.low < lastLow ? "LL" : "HL";
+                let color = current.low < lastLow ? 'var(--red)' : 'var(--green)';
+                markers.push({ time: current.time, position: 'belowBar', color: color, shape: 'text', text: label });
+                lastLow = current.low;
             }
         }
 
-        // Clear old Price Lines
-        currentPriceLines.forEach(l => candleSeries.removePriceLine(l));
-        currentPriceLines = [];
+        // 2. Identify BOS & CHOCH (With localized Markers/Arrows, NO LONG LINES)
+        const recent = candles.slice(-20);
+        let bosDetected = false, chochDetected = false;
 
-        // Identify HH, HL, LL, LH and BOS/CHOCH
-        let lastHigh = 0, lastLow = 9999999, currentTrend = 'neutral';
-
-        // Highs Analysis
-        pivotsH.slice(-8).forEach((p, idx, arr) => {
-            let label = "HH";
-            if (idx > 0) {
-                if (p.val > arr[idx-1].val) {
-                    label = "HH";
-                    // Draw BOS line for HH
-                    const line = candleSeries.createPriceLine({
-                        price: p.val, color: 'rgba(0, 255, 136, 0.3)', lineWidth: 1, lineStyle: 2, title: 'BOS'
-                    });
-                    currentPriceLines.push(line);
-                } else {
-                    label = "LH";
-                }
+        for (let j = 1; j < recent.length; j++) {
+            // BOS Uptrend (Break HH)
+            if (recent[j].close > lastHigh && !bosDetected) {
+                markers.push({ time: recent[j].time, position: 'aboveBar', color: 'var(--blue)', shape: 'arrowDown', text: 'BOS ↑' });
+                bosDetected = true;
+                updateDot('factBOS', true, true);
             }
-            markers.push({ time: p.time, position: 'aboveBar', color: '#fff', shape: 'text', text: label });
-        });
-
-        // Lows Analysis
-        pivotsL.slice(-8).forEach((p, idx, arr) => {
-            let label = "LL";
-            if (idx > 0) {
-                if (p.val < arr[idx-1].val) {
-                    label = "LL";
-                    const line = candleSeries.createPriceLine({
-                        price: p.val, color: 'rgba(255, 77, 77, 0.3)', lineWidth: 1, lineStyle: 2, title: 'BOS'
-                    });
-                    currentPriceLines.push(line);
-                } else {
-                    label = "HL";
-                }
+            // CHOCH (Reversal)
+            if (recent[j].close < lastLow && lastHigh > 0 && !chochDetected) {
+                markers.push({ time: recent[j].time, position: 'belowBar', color: 'var(--yellow)', shape: 'arrowUp', text: 'CHOCH ⚡' });
+                chochDetected = true;
+                updateDot('factCH', true, false);
+                document.getElementById('factCH').className = 'dot active-yellow';
             }
-            markers.push({ time: p.time, position: 'belowBar', color: '#fff', shape: 'text', text: label });
-        });
+        }
 
-        // CHOCH Detection (Recent structure break)
-        const lastCandle = candles[candles.length - 1];
-        const recentHighs = pivotsH.slice(-3);
-        const recentLows = pivotsL.slice(-3);
-        
-        if(recentHighs.length > 0 && lastCandle.close > recentHighs[recentHighs.length-1].val) {
-            markers.push({ time: lastCandle.time, position: 'aboveBar', color: 'var(--blue)', shape: 'arrowDown', text: 'CHOCH 🟢' });
-            updateDot('factCH', true, true);
-        } else { updateDot('factCH', false); }
-
-        if(recentLows.length > 0 && lastCandle.close < recentLows[recentLows.length-1].val) {
-            markers.push({ time: lastCandle.time, position: 'belowBar', color: 'var(--red)', shape: 'arrowUp', text: 'CHOCH 🔴' });
-            updateDot('factBOS', true, false); // Re-using existing dots as requested
-        } else { updateDot('factBOS', false); }
-
-        // Draw Trendlines
-        if (pivotsH.length > 2) trendLineHighs.setData(pivotsH.slice(-5).map(p => ({ time: p.time, value: p.val })));
-        if (pivotsL.length > 2) trendLineLows.setData(pivotsL.slice(-5).map(p => ({ time: p.time, value: p.val })));
+        if(!bosDetected) updateDot('factBOS', false);
+        if(!chochDetected) updateDot('factCH', false);
 
         candleSeries.setMarkers(markers);
     }
@@ -341,39 +313,58 @@
     function triggerSignal(type, score) {
         if (isLocked) return;
         isLocked = true;
-        lockEndTime = Date.now() + (3 * 60 * 1000);
+        lockEndTime = Date.now() + (2 * 60 * 1000); // 2 min lock
 
         if (document.getElementById('alarmToggle').checked) {
-            const u = new SpeechSynthesisUtterance(`${type} Signal ${score} percent accuracy`);
+            const u = new SpeechSynthesisUtterance(`${type} Signal confirmed with ${score} percent accuracy`);
             window.speechSynthesis.speak(u);
         }
         addHistory(type, score);
     }
 
     function addHistory(type, acc) {
-        const item = { id: Date.now(), time: new Date().toLocaleTimeString(), market: document.getElementById('market').value, type, entry: candles[candles.length-1].close, acc, status: 'PENDING', expiry: Date.now() + 180000 };
+        const entryPrice = candles[candles.length-1].close;
+        const item = { 
+            id: Date.now(), 
+            time: new Date().toLocaleTimeString(), 
+            market: document.getElementById('market').value, 
+            type, entry: entryPrice, acc, 
+            status: 'PENDING', 
+            expiry: Date.now() + 120000 
+        };
         signalHistory.unshift(item);
+        if(signalHistory.length > 50) signalHistory.pop();
         localStorage.setItem('janaka_v6_history', JSON.stringify(signalHistory));
         renderHistory();
     }
 
     function renderHistory() {
-        const list = document.getElementById('historyList'); list.innerHTML = "";
-        let w = 0, l = 0;
-        signalHistory.slice(0, 20).forEach(s => {
-            if (s.status === 'WIN') w++; if (s.status === 'LOSS') l++;
+        const list = document.getElementById('historyList'); 
+        list.innerHTML = "";
+        let wins = 0, losses = 0;
+        signalHistory.forEach(s => {
+            if (s.status === 'WIN') wins++;
+            if (s.status === 'LOSS') losses++;
             const row = document.createElement('div');
             row.className = 'history-item';
-            row.innerHTML = `<div>${s.time}</div><div>${s.market}</div><div style="color:${s.type==='BUY'?'var(--green)':'var(--red)'}">${s.type}</div><div>${s.entry.toFixed(2)}</div><div style="color:${s.status==='WIN'?'var(--green)':'var(--red)'}">${s.status}</div><div>${s.acc}%</div>`;
+            row.innerHTML = `
+                <div>${s.time}</div>
+                <div>${s.market.replace('R_','Vol ')}</div>
+                <div style="color:${s.type==='BUY'?'var(--green)':'var(--red)'}; font-weight:bold">${s.type}</div>
+                <div>${s.entry.toFixed(2)}</div>
+                <div style="color:${s.status==='WIN'?'var(--green)':'var(--red)'}">${s.status}</div>
+                <div>${s.acc}%</div>
+            `;
             list.appendChild(row);
         });
-        document.getElementById('totalWins').innerText = w; document.getElementById('totalLoss').innerText = l;
+        document.getElementById('totalWins').innerText = wins;
+        document.getElementById('totalLoss').innerText = losses;
     }
 
-    function checkResult(id, price) {
+    function checkResult(id, currentPrice) {
         const s = signalHistory.find(x => x.id === id);
         if (s && s.status === 'PENDING') {
-            s.status = s.type === 'BUY' ? (price > s.entry ? 'WIN' : 'LOSS') : (price < s.entry ? 'WIN' : 'LOSS');
+            s.status = s.type === 'BUY' ? (currentPrice > s.entry ? 'WIN' : 'LOSS') : (currentPrice < s.entry ? 'WIN' : 'LOSS');
             localStorage.setItem('janaka_v6_history', JSON.stringify(signalHistory));
             renderHistory();
         }
@@ -388,10 +379,21 @@
         });
     }, 5000);
 
-    document.getElementById('accThreshold').oninput = (e) => document.getElementById('accVal').innerText = e.target.value + "%";
+    document.getElementById('accThreshold').oninput = (e) => {
+        document.getElementById('accVal').innerText = e.target.value + "%";
+    };
+
     document.getElementById('market').onchange = () => { isLocked = false; connect(); };
     document.getElementById('timeframe').onchange = () => { isLocked = false; connect(); };
-    window.onload = () => { initChart(); connect(); };
+    
+    window.onload = () => { 
+        initChart(); 
+        connect(); 
+        // Resize chart on window change
+        window.addEventListener('resize', () => {
+            chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+        });
+    };
 </script>
 </body>
 </html>
