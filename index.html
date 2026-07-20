@@ -534,10 +534,36 @@
 
     document.getElementById('accThreshold').oninput = (e) => document.getElementById('accVal').innerText = e.target.value + '%';
     document.getElementById('volSlider').oninput = (e) => document.getElementById('volVal').innerText = Math.round(e.target.value * 100) + '%';
-    document.getElementById('market').addEventListener('change', (e) => { currentMarket = e.target.value; connect(); });
-    document.getElementById('timeframe').addEventListener('change', (e) => { currentTimeframe = e.target.value; connect(); });
+    // Settings Save කිරීම
+function saveSettings() {
+    localStorage.setItem('janaka_market', currentMarket);
+    localStorage.setItem('janaka_timeframe', currentTimeframe);
+}
 
-    window.onload = () => { initChart(); checkAndResetHistory(); connect(); setInterval(updateSignalResults, 1000); };
+document.getElementById('market').addEventListener('change', (e) => { 
+    currentMarket = e.target.value; 
+    saveSettings(); 
+    connect(); 
+});
+document.getElementById('timeframe').addEventListener('change', (e) => { 
+    currentTimeframe = e.target.value; 
+    saveSettings(); 
+    connect(); 
+});
+
+window.onload = () => { 
+    initChart(); 
+    checkAndResetHistory(); 
+    
+    // කලින් තිබූ සැකසුම් ලබා ගැනීම
+    const sM = localStorage.getItem('janaka_market');
+    const sT = localStorage.getItem('janaka_timeframe');
+    if (sM) { currentMarket = sM; document.getElementById('market').value = sM; }
+    if (sT) { currentTimeframe = sT; document.getElementById('timeframe').value = sT; }
+    
+    connect(); 
+    setInterval(updateSignalResults, 1000); 
+};
     document.addEventListener('click', () => { if (window.speechSynthesis.speaking) return; const u = new SpeechSynthesisUtterance(""); window.speechSynthesis.speak(u); }, { once: true });
 </script>
 </body>
