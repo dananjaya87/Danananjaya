@@ -509,13 +509,7 @@
         if (c2.close > c1.open && c2.close > c1.high) pattern = "BULLISH ENG.";
         if (c2.close < c1.open && c2.close < c1.low) pattern = "BEARISH ENG.";
 
-        let score = 0;
-        if (currentTrend === 'UP' && trendM5 === 'UP' && trendM15 === 'UP') score += 30;
-        if (currentTrend === 'DOWN' && trendM5 === 'DOWN' && trendM15 === 'DOWN') score += 30;
-        if (zone === 'DISCOUNT' && currentTrend === 'UP') score += 20;
-        if (zone === 'PREMIUM' && currentTrend === 'DOWN') score += 20;
-        if (pattern !== "NONE") score += 20;
-        score = Math.min(score, 100);
+        
 
         
         updateUI(currentTrend, trendM5, trendM15, zone, eq, minPrice, maxPrice, pattern);
