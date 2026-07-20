@@ -540,14 +540,7 @@
         if (pattern !== "NONE") score += 20;
         score = Math.min(score, 100);
 
-        const sigEl = document.getElementById('signalText');
-        if (currentTrend === 'UP' && zone === 'DISCOUNT' && score >= 20) { sigEl.innerText = "CALL (BUY) 2-3 MIN"; sigEl.style.color = "var(--green)"; speakSignal('buy', score); }
-        else if (currentTrend === 'DOWN' && zone === 'PREMIUM' && score >= 20) { sigEl.innerText = "PUT (SELL) 2-3 MIN"; sigEl.style.color = "var(--red)"; speakSignal('sell', score); }
-        else { sigEl.innerText = "WAITING FOR SETUP..."; sigEl.style.color = "#848d97"; lastSpokenSignal = ""; }
-
-        document.getElementById('accuracyText').innerText = `ACCURACY: ${score}%`;
-        document.getElementById('accuracyFill').style.width = `${score}%`;
-        document.getElementById('accuracyFill').style.background = score > 80 ? 'var(--green)' : (score > 50 ? 'var(--yellow)' : 'var(--red)');
+        
         updateUI(currentTrend, trendM5, trendM15, zone, eq, minPrice, maxPrice, pattern);
         candleSeries.setMarkers(markers);
     }
