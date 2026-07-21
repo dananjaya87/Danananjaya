@@ -720,7 +720,30 @@ if (hiddenOpen) {
     document.getElementById("hiddenOpen").innerHTML = "⚪ OFF";
 }
 
-    
+    // ===== FVG (3 Candle Rule) =====
+
+const fvg1 = candles[candles.length - 4];
+const fvg2 = candles[candles.length - 3];
+const fvg3 = candles[candles.length - 2];
+
+let fvg = false;
+
+// BUY FVG
+if (fvg3.low > fvg1.high) {
+    fvg = true;
+}
+
+// SELL FVG
+else if (fvg3.high < fvg1.low) {
+    fvg = true;
+}
+
+// Update Box
+if (fvg) {
+    document.getElementById("fvg").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("fvg").innerHTML = "⚪ OFF";
+}
     
 
 
