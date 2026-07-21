@@ -586,10 +586,7 @@
         const eq = (maxPrice + minPrice) / 2;
         const currentPrice = candles[candles.length-1].close;
         const zone = currentPrice > eq ? 'PREMIUM' : 'DISCOUNT';
-        let pattern = "NONE";
-        const c1 = candles[candles.length-2], c2 = candles[candles.length-1];
-        if (c2.close > c1.open && c2.close > c1.high) pattern = "BULLISH ENG.";
-        if (c2.close < c1.open && c2.close < c1.low) pattern = "BEARISH ENG.";
+        
 
 // ===== ONE COLOUR (3 Closed Candles) =====
 
@@ -625,40 +622,51 @@ if (oneColour) {
 
 // ===== ENGULFING =====
 
-const p1 = candles[candles.length - 3];
-const p2 = candles[candles.length - 2];
+let pattern = "NONE";
+
+const prev = candles[candles.length - 3];
+const last = candles[candles.length - 2];
 
 let engulfing = false;
 let engulfingSide = "";
 
-// BUY Engulfing
+// BUY
 if (
-    p1.close < p1.open &&
-    p2.close > p2.open &&
-    p2.open <= p1.close &&
-    p2.close >= p1.open
+    prev.close < prev.open &&
+    last.close > last.open &&
+    last.open <= prev.close &&
+    last.close >= prev.open
 ) {
     engulfing = true;
     engulfingSide = "BUY";
+    pattern = "BULLISH ENG.";
 }
 
-// SELL Engulfing
+// SELL
 else if (
-    p1.close > p1.open &&
-    p2.close < p2.open &&
-    p2.open >= p1.close &&
-    p2.close <= p1.open
+    prev.close > prev.open &&
+    last.close < last.open &&
+    last.open >= prev.close &&
+    last.close <= prev.open
 ) {
     engulfing = true;
     engulfingSide = "SELL";
+    pattern = "BEARISH ENG.";
 }
 
-// Update Box
-if (engulfing) {
-    document.getElementById("engulfing").innerHTML = "🔵 ON";
-} else {
-    document.getElementById("engulfing").innerHTML = "⚪ OFF";
-}
+document.getElementById("engulfing").innerHTML =
+    engulfing ? "🔵 ON" : "⚪ OFF";
+
+
+
+    
+    
+
+
+
+    
+
+
     
 
 
