@@ -606,7 +606,11 @@ if (c1.close < c1.open && c2.close < c2.open) {
     signalSide = "SELL";
 }
 
-        
+        if (oneColour) {
+    document.getElementById("oneColour").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("oneColour").innerHTML = "⚪ OFF";
+}
         updateUI(currentTrend, trendM5, trendM15, zone, eq, minPrice, maxPrice, pattern);
         candleSeries.setMarkers(markers);
     }
