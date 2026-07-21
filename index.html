@@ -591,20 +591,45 @@
         if (c2.close > c1.open && c2.close > c1.high) pattern = "BULLISH ENG.";
         if (c2.close < c1.open && c2.close < c1.low) pattern = "BEARISH ENG.";
 
-        // ===== ONE COLOUR =====
+// ===== ONE COLOUR (3 Closed Candles) =====
+
+const c0 = candles[candles.length - 4];
+const c1 = candles[candles.length - 3];
+const c2 = candles[candles.length - 2];
 
 let oneColour = false;
 let signalSide = "";
 
-if (c1.close > c1.open && c2.close > c2.open) {
+if (
+    c0.close > c0.open &&
+    c1.close > c1.open &&
+    c2.close > c2.open
+) {
     oneColour = true;
     signalSide = "BUY";
 }
 
-if (c1.close < c1.open && c2.close < c2.open) {
+else if (
+    c0.close < c0.open &&
+    c1.close < c1.open &&
+    c2.close < c2.open
+) {
     oneColour = true;
     signalSide = "SELL";
 }
+
+// Update Box
+if (oneColour) {
+    document.getElementById("oneColour").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("oneColour").innerHTML = "⚪ OFF";
+}
+
+
+
+
+
+
 
         if (oneColour) {
     document.getElementById("oneColour").innerHTML = "🔵 ON";
