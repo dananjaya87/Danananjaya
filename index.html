@@ -623,7 +623,42 @@ if (oneColour) {
     document.getElementById("oneColour").innerHTML = "⚪ OFF";
 }
 
+// ===== ENGULFING =====
 
+const p1 = candles[candles.length - 3];
+const p2 = candles[candles.length - 2];
+
+let engulfing = false;
+let engulfingSide = "";
+
+// BUY Engulfing
+if (
+    p1.close < p1.open &&
+    p2.close > p2.open &&
+    p2.open <= p1.close &&
+    p2.close >= p1.open
+) {
+    engulfing = true;
+    engulfingSide = "BUY";
+}
+
+// SELL Engulfing
+else if (
+    p1.close > p1.open &&
+    p2.close < p2.open &&
+    p2.open >= p1.close &&
+    p2.close <= p1.open
+) {
+    engulfing = true;
+    engulfingSide = "SELL";
+}
+
+// Update Box
+if (engulfing) {
+    document.getElementById("engulfing").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("engulfing").innerHTML = "⚪ OFF";
+}
     
 
 
