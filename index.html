@@ -585,6 +585,29 @@
         const minPrice = Math.min(...candles.slice(-50).map(c => c.low));
         const eq = (maxPrice + minPrice) / 2;
         const currentPrice = candles[candles.length-1].close;
+
+// ===== KEY LEVEL (ROUND NUMBER) =====
+
+const decimals = currentMarket.startsWith("frx") ? 5 : 0;
+
+const roundLevel = Number(currentPrice.toFixed(decimals));
+
+let roundHit = false;
+
+if (currentMarket.startsWith("frx")) {
+    // Forex
+    roundHit = Math.abs(currentPrice - roundLevel) <= 0.00030;
+} else {
+    // Volatility / Jump
+    roundHit = Math.abs(currentPrice - roundLevel) <= 0.20;
+}
+
+if (roundHit) {
+    document.getElementById("keyLevel").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("keyLevel").innerHTML = "⚪ OFF";
+}
+        
         const zone = currentPrice > eq ? 'PREMIUM' : 'DISCOUNT';
         
 
