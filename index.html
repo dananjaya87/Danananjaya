@@ -593,37 +593,44 @@
 
 // ===== ONE COLOUR (3 Closed Candles) =====
 
-const c0 = candles[candles.length - 4];
-const c1 = candles[candles.length - 3];
-const c2 = candles[candles.length - 2];
+const oc0 = candles[candles.length - 4];
+const oc1 = candles[candles.length - 3];
+const oc2 = candles[candles.length - 2];
 
 let oneColour = false;
 let signalSide = "";
 
 if (
-    c0.close > c0.open &&
-    c1.close > c1.open &&
-    c2.close > c2.open
+    oc0.close > oc0.open &&
+    oc1.close > oc1.open &&
+    oc2.close > oc2.open
 ) {
     oneColour = true;
     signalSide = "BUY";
 }
-
 else if (
-    c0.close < c0.open &&
-    c1.close < c1.open &&
-    c2.close < c2.open
+    oc0.close < oc0.open &&
+    oc1.close < oc1.open &&
+    oc2.close < oc2.open
 ) {
     oneColour = true;
     signalSide = "SELL";
 }
 
-// Update Box
 if (oneColour) {
     document.getElementById("oneColour").innerHTML = "🔵 ON";
 } else {
     document.getElementById("oneColour").innerHTML = "⚪ OFF";
 }
+
+
+    
+
+
+    
+
+
+
 
 
 
