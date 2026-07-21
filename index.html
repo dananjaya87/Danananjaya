@@ -657,7 +657,45 @@ else if (
 document.getElementById("engulfing").innerHTML =
     engulfing ? "🔵 ON" : "⚪ OFF";
 
+// ===== HIDDEN OPEN =====
 
+// Candle 1 & 2 (Closed)
+const h1 = candles[candles.length - 3];
+const h2 = candles[candles.length - 2];
+
+// Candle 3 (Current Live Candle)
+const h3 = candles[candles.length - 1];
+
+let hiddenOpen = false;
+
+// BUY
+if (
+    h1.close > h1.open &&
+    h2.close > h2.open &&
+    h3.open < h2.close &&
+    h3.open > ((h2.open + h2.close) / 2)
+) {
+    hiddenOpen = true;
+    signalSide = "BUY";
+}
+
+// SELL
+else if (
+    h1.close < h1.open &&
+    h2.close < h2.open &&
+    h3.open > h2.close &&
+    h3.open < ((h2.open + h2.close) / 2)
+) {
+    hiddenOpen = true;
+    signalSide = "SELL";
+}
+
+// Box Update
+if (hiddenOpen) {
+    document.getElementById("hiddenOpen").innerHTML = "🔵 ON";
+} else {
+    document.getElementById("hiddenOpen").innerHTML = "⚪ OFF";
+}
 
     
     
