@@ -591,7 +591,20 @@
         if (c2.close > c1.open && c2.close > c1.high) pattern = "BULLISH ENG.";
         if (c2.close < c1.open && c2.close < c1.low) pattern = "BEARISH ENG.";
 
-        
+        // ===== ONE COLOUR =====
+
+let oneColour = false;
+let signalSide = "";
+
+if (c1.close > c1.open && c2.close > c2.open) {
+    oneColour = true;
+    signalSide = "BUY";
+}
+
+if (c1.close < c1.open && c2.close < c2.open) {
+    oneColour = true;
+    signalSide = "SELL";
+}
 
         
         updateUI(currentTrend, trendM5, trendM15, zone, eq, minPrice, maxPrice, pattern);
