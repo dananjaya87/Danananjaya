@@ -720,26 +720,36 @@ if (hiddenOpen) {
     document.getElementById("hiddenOpen").innerHTML = "⚪ OFF";
 }
 
-    // ===== FVG (3 Candle Rule) =====
+    
+// ===== FVG =====
 
-const fvg1 = candles[candles.length - 4];
-const fvg2 = candles[candles.length - 3];
-const fvg3 = candles[candles.length - 2];
+const fv1 = candles[candles.length - 4];
+const fv2 = candles[candles.length - 3];
+const fv3 = candles[candles.length - 2];
 
-let fvg = false;
+let bullishFVG = false;
+let bearishFVG = false;
 
 // BUY FVG
-if (fvg3.low > fvg1.high) {
-    fvg = true;
+if (
+    currentTrend === "UP" &&
+    fv2.close > fv2.open &&
+    fv3.low > fv1.high
+) {
+    bullishFVG = true;
 }
 
 // SELL FVG
-else if (fvg3.high < fvg1.low) {
-    fvg = true;
+if (
+    currentTrend === "DOWN" &&
+    fv2.close < fv2.open &&
+    fv3.high < fv1.low
+) {
+    bearishFVG = true;
 }
 
 // Update Box
-if (fvg) {
+if (bullishFVG || bearishFVG) {
     document.getElementById("fvg").innerHTML = "🔵 ON";
 } else {
     document.getElementById("fvg").innerHTML = "⚪ OFF";
