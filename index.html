@@ -721,7 +721,7 @@ if (hiddenOpen) {
 }
 
     
-// ===== FVG =====
+// ===== FVG (Trend Direction Only) =====
 
 const fv1 = candles[candles.length - 4];
 const fv2 = candles[candles.length - 3];
@@ -733,7 +733,9 @@ let bearishFVG = false;
 // BUY FVG
 if (
     currentTrend === "UP" &&
+    fv1.close > fv1.open &&
     fv2.close > fv2.open &&
+    fv3.close > fv3.open &&
     fv3.low > fv1.high
 ) {
     bullishFVG = true;
@@ -742,18 +744,26 @@ if (
 // SELL FVG
 if (
     currentTrend === "DOWN" &&
+    fv1.close < fv1.open &&
     fv2.close < fv2.open &&
+    fv3.close < fv3.open &&
     fv3.high < fv1.low
 ) {
     bearishFVG = true;
 }
 
-// Update Box
+// ===== Update FVG Box =====
+
 if (bullishFVG || bearishFVG) {
-    document.getElementById("fvg").innerHTML = "🔵 ON";
+    document.getElementById("fvgSignal").innerHTML = "🔵 ON";
+    document.getElementById("fvgSignal").style.color = "#00bfff";
 } else {
-    document.getElementById("fvg").innerHTML = "⚪ OFF";
+    document.getElementById("fvgSignal").innerHTML = "⚪ OFF";
+    document.getElementById("fvgSignal").style.color = "#888";
 }
+
+
+    
 
 
 
