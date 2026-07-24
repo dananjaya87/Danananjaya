@@ -466,6 +466,10 @@
     }
 
     function initChart() {
+        if (typeof LightweightCharts === 'undefined') {
+    console.error('LightweightCharts library failed to load');
+    return;
+}
         chart = LightweightCharts.createChart(document.getElementById('chart'), {
             layout: { background: { color: '#0d1117' }, textColor: '#cbd5e1' },
             grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
