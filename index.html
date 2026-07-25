@@ -3,127 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMC Chart Dashboard - Deriv</title>
-    <!-- TradingView Lightweight Charts CDN -->
+    <title>Deriv Live SMC Chart - Verified</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background-color: #131722; color: white; }
-        #header { padding: 15px; background: #1e222d; text-align: center; font-size: 20px; font-weight: bold; border-bottom: 1px solid #363c4e; }
-        #chart-container { 
-            width: 95%; 
-            height: 550px; 
-            margin: 20px auto; 
-            border: 1px solid #363c4e;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .status { text-align: center; color: #00ff00; font-size: 14px; margin-top: 10px; }
+        body { margin: 0; background-color: #131722; color: #d1d4dc; font-family: sans-serif; overflow: hidden; }
+        #nav { padding: 10px 20px; background-color: #1e222d; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #363c4e; height: 50px; }
+        select { padding: 6px; background: #2a2e39; color: white; border: 1px solid #444; border-radius: 4px; }
+        #chart-container { width: 100%; height: calc(100vh - 70px); }
+        .status-dot { height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        #status-text { font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div id="header">DERIV REAL-TIME CHART (SMC)</div>
-    <div id="status" class="status">Connecting to Deriv...</div>
-    <div id="chart-container"></div>
+<div id="nav">
+    <div>
+        <span id="dot" class="status-dot"></span>
+        <span id="status-text">Connecting to Deriv...</span>
+    </div>
+    <div>
+        <select id="symbol-select">
+            <option value="R_100">Volatility 100 Index</option>
+            <option value="R_50">Volatility 50 Index</option>
+            <option value="R_10">Volatility 10 Index</option>
+            <option value="1HZ100V">Volatility 100 (1s) Index</option>
+        </select>
+    </div>
+</div>
 
-    <script>
-        const chartContainer = document.getElementById('chart-container');
-        const statusText = document.getElementById('status');
+<div id="chart-container"></div>
 
-        // 1. Chart එක Initialize කිරීම
-        const chart = LightweightCharts.createChart(chartContainer, {
-            layout: {
-                background: { color: '#131722' },
-                textColor: '#d1d4dc',
-            },
-            grid: {
-                vertLines: { color: '#2b2b43' },
-                horzLines: { color: '#2b2b43' },
-            },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            rightPriceScale: { borderColor: '#485c7b' },
-            timeScale: { borderColor: '#485c7b', timeVisible: true, secondsVisible: false },
-        });
+<script>
+    const container = document.getElementById('chart-container');
+    const symbolSelect = document.getElementById('symbol-select');
+    const statusText = document.getElementById('status-text');
+    const dot = document.getElementById('dot');
 
-        const candleSeries = chart.addCandlestickSeries({
-            upColor: '#26a69a', downColor: '#ef5350', 
-            borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
-        });
+    // 1. Chart එක Create කිරීම
+    const chart = LightweightCharts.createChart(container, {
+        layout: { backgroundColor: '#131722', textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#2b2b43' }, horzLines: { color: '#2b2b43' } },
+        timeScale: { timeVisible: true, secondsVisible: false },
+    });
 
-        // 2. Deriv WebSocket සම්බන්ධතාවය
-        const app_id = 33yT1dsi34DD6WXIM9hB6; 
-        const symbol = "R_100"; // Volatility 100 Index (වෙනස් කළ හැක)
-        const granularity = 60; // 60 යනු විනාඩි 1 (1 minute candles)
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a', downColor: '#ef5350', 
+        borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+    });
 
-        let ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${app_id}`);
+    // 2. WebSocket සම්බන්ධතාවය
+    let ws;
+    let currentSymbol = 'R_100';
+
+    function startStreaming() {
+        if(ws) ws.close();
+        
+        ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
 
         ws.onopen = () => {
-            statusText.innerText = `Connected to ${symbol} (1M)`;
+            statusText.innerText = "Connected to " + currentSymbol;
+            dot.style.backgroundColor = "#00ff00";
             
-            // History සහ Live candles ලබා ගැනීමට Request එක
+            // ඉතිහාස දත්ත සහ සජීවී දත්ත එකවර ඉල්ලීම (Subscribe)
             ws.send(JSON.stringify({
-                "ticks_history": symbol,
-                "adjust_start_time": 1,
-                "subscribe": 1,
-                "end": "latest",
-                "count": 1000,
-                "style": "candles",
-                "granularity": granularity // මේක අනිවාර්යයි!
+                ticks_history: currentSymbol,
+                adjust_start_time: 1,
+                count: 500,
+                end: "latest",
+                style: "candles",
+                granularity: 60,
+                subscribe: 1
             }));
         };
 
         ws.onmessage = (msg) => {
             const data = JSON.parse(msg.data);
 
-            if (data.error) {
-                statusText.innerText = "Error: " + data.error.message;
-                return;
-            }
-
-            // මුලින්ම ලැබෙන History Data (Candles array එක)
-            if (data.candles) {
-                const historyData = data.candles.map(c => ({
+            // මුලින්ම ලැබෙන 500 candles
+            if (data.msg_type === 'ticks_history') {
+                const history = data.candles.map(c => ({
                     time: c.epoch,
-                    open: c.open,
-                    high: c.high,
-                    low: c.low,
-                    close: c.close
+                    open: parseFloat(c.open),
+                    high: parseFloat(c.high),
+                    low: parseFloat(c.low),
+                    close: parseFloat(c.close)
                 }));
-                candleSeries.setData(historyData);
-                statusText.innerText = `${symbol} - Live Updates`;
+                candleSeries.setData(history);
             }
 
-            // Live Update (ohlc object එක)
-            if (data.ohlc) {
+            // හැම තත්පරයකම අලුතින් ලැබෙන updates
+            if (data.msg_type === 'ohlc') {
+                const o = data.ohlc;
                 candleSeries.update({
-                    time: data.ohlc.open_time,
-                    open: parseFloat(data.ohlc.open),
-                    high: parseFloat(data.ohlc.high),
-                    low: parseFloat(data.ohlc.low),
-                    close: parseFloat(data.ohlc.close)
+                    time: parseInt(o.open_time),
+                    open: parseFloat(o.open),
+                    high: parseFloat(o.high),
+                    low: parseFloat(o.low),
+                    close: parseFloat(o.close)
                 });
             }
         };
 
         ws.onerror = (err) => {
-            statusText.innerText = "Connection Error!";
-            console.error("WS Error:", err);
+            statusText.innerText = "Error: Connection Failed";
+            dot.style.backgroundColor = "#ff0000";
         };
+    }
 
-        ws.onclose = () => {
-            statusText.innerText = "Connection Closed. Retrying...";
-            // සම්බන්ධතාවය විසන්ධි වුනොත් නැවත සම්බන්ධ වීමට උත්සාහ කරයි
-            setTimeout(() => location.reload(), 5000);
-        };
+    // Symbol එක වෙනස් කළ විට
+    symbolSelect.onchange = (e) => {
+        currentSymbol = e.target.value;
+        candleSeries.setData([]); // Chart එක clear කරන්න
+        startStreaming();
+    };
 
-        // Window එක resize කරන විට Chart එක auto-fit වීම
-        window.addEventListener('resize', () => {
-            chart.applyOptions({ 
-                width: chartContainer.clientWidth,
-                height: chartContainer.clientHeight 
-            });
-        });
+    // ආරම්භයේදී ක්‍රියාත්මක කරන්න
+    startStreaming();
 
-    </script>
+    // Window Resize එක හැසිරවීම
+    window.onresize = () => {
+        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+    };
+</script>
 </body>
 </html>
