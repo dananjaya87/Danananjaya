@@ -8,22 +8,21 @@
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         body { font-family: sans-serif; margin: 0; background-color: #131722; color: white; }
-        #header { padding: 15px; background: #1e222d; text-align: center; font-size: 20px; font-weight: bold; }
-        /* Chart එක පෙන්නන්න මේ Container එකට උසක් (Height) තිබීම අනිවාර්යයි */
+        #header { padding: 15px; background: #1e222d; text-align: center; font-size: 20px; font-weight: bold; border-bottom: 1px solid #363c4e; }
         #chart-container { 
             width: 95%; 
-            height: 600px; 
+            height: 550px; 
             margin: 20px auto; 
             border: 1px solid #363c4e;
             border-radius: 8px;
             overflow: hidden;
         }
-        .status { text-align: center; color: #00ff00; font-size: 14px; }
+        .status { text-align: center; color: #00ff00; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="header">SMC TRADING DASHBOARD (DERIV)</div>
+    <div id="header">DERIV REAL-TIME CHART (SMC)</div>
     <div id="status" class="status">Connecting to Deriv...</div>
     <div id="chart-container"></div>
 
@@ -31,7 +30,7 @@
         const chartContainer = document.getElementById('chart-container');
         const statusText = document.getElementById('status');
 
-        // 1. Chart එක Initialize කිරීම (අලුත්ම Version එකට අනුව)
+        // 1. Chart එක Initialize කිරීම
         const chart = LightweightCharts.createChart(chartContainer, {
             layout: {
                 background: { color: '#131722' },
@@ -43,38 +42,45 @@
             },
             crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
             rightPriceScale: { borderColor: '#485c7b' },
-            timeScale: { borderColor: '#485c7b', timeVisible: true, secondsVisible: true },
+            timeScale: { borderColor: '#485c7b', timeVisible: true, secondsVisible: false },
         });
 
-        // Candlestick Series එක එකතු කිරීම
         const candleSeries = chart.addCandlestickSeries({
             upColor: '#26a69a', downColor: '#ef5350', 
             borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
         });
 
         // 2. Deriv WebSocket සම්බන්ධතාවය
-        const app_id = 1089; // මූලික app_id එක
-        const ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${app_id}`);
+        const app_id = 1089; 
+        const symbol = "R_100"; // Volatility 100 Index (වෙනස් කළ හැක)
+        const granularity = 60; // 60 යනු විනාඩි 1 (1 minute candles)
 
-        const symbol = "1HZ100V"; // Volatility 100 (1s) Index
+        let ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${app_id}`);
 
         ws.onopen = () => {
-            statusText.innerText = `Connected to ${symbol}`;
-            // ඉතිහාස දත්ත සහ Live Updates ලබා ගැනීමට Request එක
+            statusText.innerText = `Connected to ${symbol} (1M)`;
+            
+            // History සහ Live candles ලබා ගැනීමට Request එක
             ws.send(JSON.stringify({
                 "ticks_history": symbol,
                 "adjust_start_time": 1,
                 "subscribe": 1,
                 "end": "latest",
-                "count": 500, // ඉටිපන්දම් 500ක් ගෙන්වා ගනී
-                "style": "candles"
+                "count": 1000,
+                "style": "candles",
+                "granularity": granularity // මේක අනිවාර්යයි!
             }));
         };
 
         ws.onmessage = (msg) => {
             const data = JSON.parse(msg.data);
 
-            // මුලින්ම ලැබෙන Candle History එක Chart එකට දැමීම
+            if (data.error) {
+                statusText.innerText = "Error: " + data.error.message;
+                return;
+            }
+
+            // මුලින්ම ලැබෙන History Data (Candles array එක)
             if (data.candles) {
                 const historyData = data.candles.map(c => ({
                     time: c.epoch,
@@ -84,27 +90,39 @@
                     close: c.close
                 }));
                 candleSeries.setData(historyData);
+                statusText.innerText = `${symbol} - Live Updates`;
             }
 
-            // Live අලුත් වන Candle එක update කිරීම
+            // Live Update (ohlc object එක)
             if (data.ohlc) {
                 candleSeries.update({
                     time: data.ohlc.open_time,
-                    open: data.ohlc.open,
-                    high: data.ohlc.high,
-                    low: data.ohlc.low,
-                    close: data.ohlc.close
+                    open: parseFloat(data.ohlc.open),
+                    high: parseFloat(data.ohlc.high),
+                    low: parseFloat(data.ohlc.low),
+                    close: parseFloat(data.ohlc.close)
                 });
             }
         };
 
-        ws.onerror = (err) => console.error("WS Error:", err);
-        ws.onclose = () => statusText.innerText = "Connection Closed.";
-
-        // Window එක resize කරන විට Chart එකත් resize වීම
-        window.onresize = () => {
-            chart.applyOptions({ width: chartContainer.clientWidth });
+        ws.onerror = (err) => {
+            statusText.innerText = "Connection Error!";
+            console.error("WS Error:", err);
         };
+
+        ws.onclose = () => {
+            statusText.innerText = "Connection Closed. Retrying...";
+            // සම්බන්ධතාවය විසන්ධි වුනොත් නැවත සම්බන්ධ වීමට උත්සාහ කරයි
+            setTimeout(() => location.reload(), 5000);
+        };
+
+        // Window එක resize කරන විට Chart එක auto-fit වීම
+        window.addEventListener('resize', () => {
+            chart.applyOptions({ 
+                width: chartContainer.clientWidth,
+                height: chartContainer.clientHeight 
+            });
+        });
 
     </script>
 </body>
