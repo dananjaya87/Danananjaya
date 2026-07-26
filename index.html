@@ -470,9 +470,7 @@ height:520px;
 =========================================*/
 
 const APP_ID = "1089";
-
 const TIMEFRAME = 60;
-
 const MAX_CANDLES = 300;
 
 
@@ -481,13 +479,10 @@ const MAX_CANDLES = 300;
 =========================================*/
 
 let ws = null;
-
 let chart = null;
-
 let candleSeries = null;
-
+let trendSeries = null; 
 let candles = [];
-
 let currentMarket = "R_50";
 
 
@@ -496,18 +491,88 @@ let currentMarket = "R_50";
 =========================================*/
 
 const marketSelect = document.getElementById("market");
-
 const marketName = document.getElementById("marketName");
-
 const status = document.getElementById("status");
-
 const trend = document.getElementById("trend");
+const systemStatus = document.getElementById("systemStatus");
+const chartContainer = document.getElementById("chart");
 
-const systemStatus =
-document.getElementById("systemStatus");
 
-const chartContainer =
-document.getElementById("chart");
+/*=========================================
+        SMC LOGIC (AUTOMATIC)
+=========================================*/
+
+function calculateSMC() {
+    if (candles.length < 20) return;
+
+    let markers = [];
+    let swings = [];
+    const windowSize = 4; // To find major swings
+
+    // Find Swing Highs & Lows
+    for (let i = windowSize; i < candles.length - windowSize; i++) {
+        let isHigh = true;
+        let isLow = true;
+        for (let j = 1; j <= windowSize; j++) {
+            if (candles[i].high < candles[i-j].high || candles[i].high < candles[i+j].high) isHigh = false;
+            if (candles[i].low > candles[i-j].low || candles[i].low > candles[i+j].low) isLow = false;
+        }
+
+        if (isHigh) swings.push({ type: 'H', price: candles[i].high, time: candles[i].time });
+        if (isLow) swings.push({ type: 'L', price: candles[i].low, time: candles[i].time });
+    }
+
+    if (swings.length < 3) return;
+
+    let lastH = null, lastL = null;
+    let currentDir = ""; 
+    let lineData = [];
+
+    swings.forEach((s, idx) => {
+        let label = "";
+        let color = "#FFFFFF";
+
+        if (s.type === 'H') {
+            if (lastH && s.price > lastH.price) {
+                label = "HH"; color = "#00FF88";
+                // BOS
+                markers.push({ time: s.time, position: 'aboveBar', color: '#FFD700', shape: 'arrowDown', text: 'BOS' });
+                currentDir = "UPTREND";
+            } else if (lastH && s.price < lastH.price) {
+                label = "LH"; color = "#FF4D4D";
+                // Potential CHOCH if it was uptrend
+                if(currentDir === "UPTREND") markers.push({ time: s.time, position: 'aboveBar', color: '#FFD700', shape: 'arrowDown', text: 'CHOCH' });
+                currentDir = "DOWNTREND";
+            }
+            lastH = s;
+        } else {
+            if (lastL && s.price < lastL.price) {
+                label = "LL"; color = "#FF4D4D";
+                markers.push({ time: s.time, position: 'belowBar', color: '#FFD700', shape: 'arrowUp', text: 'BOS' });
+            } else if (lastL && s.price > lastL.price) {
+                label = "HL"; color = "#00FF88";
+                if(currentDir === "DOWNTREND") markers.push({ time: s.time, position: 'belowBar', color: '#FFD700', shape: 'arrowUp', text: 'CHOCH' });
+            }
+            lastL = s;
+        }
+
+        if (label !== "") {
+            markers.push({
+                time: s.time,
+                position: s.type === 'H' ? 'aboveBar' : 'belowBar',
+                color: color,
+                shape: 'text',
+                text: label
+            });
+        }
+        lineData.push({ time: s.time, value: s.price });
+    });
+
+    candleSeries.setMarkers(markers);
+    trendSeries.setData(lineData);
+    trend.innerText = currentDir || "ANALYZING";
+    trend.style.color = currentDir === "UPTREND" ? "#00FF88" : "#FF4D4D";
+}
 
 
 /*=========================================
@@ -517,85 +582,40 @@ document.getElementById("chart");
 function createChart(){
 
 chart = LightweightCharts.createChart(chartContainer,{
-
 layout:{
-
-background:{
-color:"#05070A"
-},
-
+background:{ color:"#05070A" },
 textColor:"#E5E7EB"
-
 },
-
 grid:{
-
-vertLines:{
-color:"#162033"
+vertLines:{ color:"#162033" },
+horzLines:{ color:"#162033" }
 },
-
-horzLines:{
-color:"#162033"
-}
-
-},
-
-rightPriceScale:{
-
-borderColor:"#253244"
-
-},
-
-timeScale:{
-
-borderColor:"#253244",
-
-timeVisible:true,
-
-secondsVisible:false
-
-},
-
-crosshair:{
-
-mode:1
-
-},
-
+rightPriceScale:{ borderColor:"#253244" },
+timeScale:{ borderColor:"#253244", timeVisible:true, secondsVisible:false },
+crosshair:{ mode:1 },
 width:chartContainer.clientWidth,
-
 height:560
-
 });
-
 
 candleSeries = chart.addCandlestickSeries({
-
 upColor:"#00FF88",
-
 downColor:"#FF4D4D",
-
 borderUpColor:"#00FF88",
-
 borderDownColor:"#FF4D4D",
-
 wickUpColor:"#00FF88",
-
 wickDownColor:"#FF4D4D"
-
 });
 
+// For Trendlines
+trendSeries = chart.addLineSeries({
+    color: 'rgba(56, 189, 248, 0.4)',
+    lineWidth: 1,
+    lineStyle: 2,
+});
 
 window.addEventListener("resize",()=>{
-
-chart.applyOptions({
-
-width:chartContainer.clientWidth
-
+chart.applyOptions({ width:chartContainer.clientWidth });
 });
-
-});
-
 }
 
 
@@ -604,19 +624,14 @@ width:chartContainer.clientWidth
 =========================================*/
 
 createChart();
-
 status.innerHTML="READY";
-
 systemStatus.innerHTML="INITIALIZED";
-
 marketName.innerHTML="Volatility 50";
     
         
 /*=========================================
         CONNECT TO DERIV
 =========================================*/
-
-
 
 function connectDeriv() {
     status.innerHTML = "CONNECTING...";
@@ -630,7 +645,6 @@ function connectDeriv() {
 
     ws.onopen = () => {
         status.innerHTML = "ONLINE";
-        // 1. මුලින්ම පරණ candles (History) ඉල්ලනවා
         ws.send(JSON.stringify({
             ticks_history: currentMarket,
             adjust_start_time: 1,
@@ -644,7 +658,6 @@ function connectDeriv() {
     ws.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
 
-        // 2. History Candles ලැබුණු විට
         if (data.candles) {
             candles = data.candles.map(c => ({
                 time: Number(c.epoch),
@@ -655,21 +668,18 @@ function connectDeriv() {
             }));
 
             candleSeries.setData(candles);
+            calculateSMC();
             systemStatus.innerHTML = "LIVE";
 
-            // 3. History ලැබුණු පසු Live Ticks වලට Subscribe වෙනවා
             ws.send(JSON.stringify({
                 ticks: currentMarket,
                 subscribe: 1
             }));
         }
 
-        // 4. Live Tick එකක් එන විට
         if (data.tick) {
             let price = Number(data.tick.quote);
             let epoch = Number(data.tick.epoch);
-            
-            // වත්මන් tick එක අයිති විය යුතු candle time එක (මිනිත්තුවේ ආරම්භය)
             let candleTime = Math.floor(epoch / TIMEFRAME) * TIMEFRAME;
 
             if (candles.length === 0) return;
@@ -677,15 +687,11 @@ function connectDeriv() {
             let lastCandle = candles[candles.length - 1];
 
             if (candleTime === lastCandle.time) {
-                // දැනට තිබෙන Candle එක ඇතුළත මිල වෙනස් වීම (Updating current candle)
                 lastCandle.close = price;
                 if (price > lastCandle.high) lastCandle.high = price;
                 if (price < lastCandle.low) lastCandle.low = price;
-                
-                // Chart එකට update එක යවනවා
                 candleSeries.update(lastCandle);
             } else {
-                // විනාඩිය අවසන් වී අලුත් Candle එකක් පටන් ගැනීම (New candle)
                 let newCandle = {
                     time: candleTime,
                     open: price,
@@ -693,74 +699,29 @@ function connectDeriv() {
                     low: price,
                     close: price
                 };
-                
-                candles.push(newCandle); // Array එකට එකතු කරනවා
-                if (candles.length > 300) candles.shift(); // 300 ට වඩා වැඩි නම් පැරණි ඒවා අයින් කරනවා
-                
-                candleSeries.update(newCandle); // Chart එකට අලුත් candle එක දානවා
-                console.log("New Candle Started:", newCandle.time);
+                candles.push(newCandle);
+                if (candles.length > 300) candles.shift();
+                candleSeries.update(newCandle);
+                calculateSMC();
             }
         }
     };
 
     ws.onclose = () => {
         status.innerHTML = "OFFLINE";
-       setTimeout(connectDeriv, 2000);  // Connection ගියොත් තත්පර 2කින් නැවත සම්බන්ධ වේ
+       setTimeout(connectDeriv, 2000);
     };
 }
 
-  
-
-    
-
-            
-
-        
-
-            
-            
-
-                
-                
-
-    
-
-    
-
-
-        
-            
-
-                
-
-            
-
-        
-            
-
-        
-
-        
-
-    
 marketSelect.addEventListener("change", () => {
-
     currentMarket = marketSelect.value;
-
-    marketName.innerHTML =
-    marketSelect.options[
-        marketSelect.selectedIndex
-    ].text;
-
+    marketName.innerHTML = marketSelect.options[marketSelect.selectedIndex].text;
     candles = [];
-
     connectDeriv();
-
 });
     
-        connectDeriv();
+connectDeriv();
 </script>
     
 </body>
-
 </html>
