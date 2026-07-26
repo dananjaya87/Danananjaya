@@ -1,181 +1,767 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JANAKA SMC DASHBOARD V6 PRO</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <!-- Lightweight Charts එක මෙතනින් ගන්නවා -->
-    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        :root{
-            --bg:#05070A;
-            --card:#111827;
-            --border:#233044;
-            --green:#00FF88;
-            --red:#FF4D4D;
-            --blue:#38BDF8;
-            --text:#FFFFFF;
-            --muted:#94A3B8;
-        }
-        body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);padding:16px;}
-        .container{width:100%;max-width:1700px;margin:auto;}
-        .title{font-size:32px;font-weight:800;text-align:center;margin-bottom:20px;color:var(--green);text-shadow:0 0 15px rgba(0,255,136,.3);}
-        .grid-top{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-        .card{background:#111827;border:1px solid var(--border);border-radius:20px;padding:18px;}
-        .card h3{font-size:17px;color:var(--blue);margin-bottom:14px;}
-        select{width:100%;height:50px;background:#08111F;color:white;border:1px solid #334155;border-radius:12px;padding:0 15px;font-size:16px;}
-        .status{font-size:17px;line-height:1.8;}
-        #chart{width:100%;height:500px;border-radius:16px;background:#0A1322;border:1px solid var(--border);}
-        .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
-        .info-box{background:#111827;border:1px solid var(--border);border-radius:18px;padding:20px;text-align:center;}
-        .info-title{font-size:14px;color:var(--muted);margin-bottom:10px;}
-        .info-value{font-size:28px;font-weight:700;font-family:'JetBrains Mono';}
-        .green{color:var(--green);}
-        .red{color:var(--red);}
-    </style>
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>JANAKA SMC DASHBOARD V6 PRO</title>
+
+<link rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+rel="stylesheet">
+
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+
+*{
+
+margin:0;
+
+padding:0;
+
+box-sizing:border-box;
+
+}
+
+:root{
+
+--bg:#05070A;
+
+--card:#111827;
+
+--card2:#0F172A;
+
+--border:#233044;
+
+--green:#00FF88;
+
+--red:#FF4D4D;
+
+--blue:#38BDF8;
+
+--text:#FFFFFF;
+
+--muted:#94A3B8;
+
+}
+
+body{
+
+background:var(--bg);
+
+font-family:'Inter',sans-serif;
+
+color:var(--text);
+
+padding:16px;
+
+overflow-x:hidden;
+
+}
+
+.container{
+
+width:100%;
+
+max-width:1700px;
+
+margin:auto;
+
+}
+
+.title{
+
+font-size:32px;
+
+font-weight:800;
+
+text-align:center;
+
+letter-spacing:2px;
+
+margin-bottom:20px;
+
+color:var(--green);
+
+text-shadow:
+
+0 0 8px rgba(0,255,136,.6),
+
+0 0 25px rgba(0,255,136,.25);
+
+}
+
+.grid-top{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:18px;
+
+margin-bottom:18px;
+
+}
+
+.card{
+
+background:linear-gradient(
+
+180deg,
+
+#111827,
+
+#0B1220
+
+);
+
+border:1px solid var(--border);
+
+border-radius:20px;
+
+padding:18px;
+
+box-shadow:
+
+0 12px 25px
+
+rgba(0,0,0,.35);
+
+}
+
+.card h3{
+
+font-size:17px;
+
+font-weight:700;
+
+color:var(--blue);
+
+margin-bottom:14px;
+
+letter-spacing:.5px;
+
+}
+
+select{
+
+width:100%;
+
+height:56px;
+
+background:#08111F;
+
+color:white;
+
+border:1px solid #334155;
+
+border-radius:14px;
+
+padding:0 16px;
+
+font-size:17px;
+
+outline:none;
+
+transition:.25s;
+
+}
+
+select:focus{
+
+border-color:var(--green);
+
+box-shadow:
+
+0 0 12px
+
+rgba(0,255,136,.3);
+
+}
+
+.status{
+
+font-size:17px;
+
+line-height:34px;
+
+}
+
+.status span{
+
+font-weight:700;
+
+color:var(--green);
+
+}
+
+.chart-card{
+
+padding:14px;
+
+}
+
+.chart-title{
+
+font-size:18px;
+
+font-weight:700;
+
+color:var(--blue);
+
+margin-bottom:12px;
+
+}
+
+#chart{
+
+width:100%;
+
+height:560px;
+
+border-radius:16px;
+
+overflow:hidden;
+
+background:#0A1322;
+
+border:1px solid var(--border);
+
+}
+
+.bottom-grid{
+
+display:grid;
+
+grid-template-columns:repeat(2,1fr);
+
+gap:18px;
+
+margin-top:18px;
+
+}
+
+.info-box{
+
+background:
+
+linear-gradient(
+
+180deg,
+
+#111827,
+
+#0A1322
+
+);
+
+border:1px solid var(--border);
+
+border-radius:18px;
+
+padding:22px;
+
+text-align:center;
+
+box-shadow:
+
+0 8px 20px
+
+rgba(0,0,0,.35);
+
+}
+
+.info-title{
+
+font-size:14px;
+
+font-weight:600;
+
+letter-spacing:1px;
+
+color:var(--muted);
+
+margin-bottom:12px;
+
+}
+
+.info-value{
+
+font-size:30px;
+
+font-weight:700;
+
+font-family:
+
+'JetBrains Mono',
+
+monospace;
+
+}
+
+.green{
+
+color:var(--green);
+
+}
+
+.cyan{
+
+color:var(--blue);
+
+}
+
+.red{
+
+color:var(--red);
+
+}
+
+@media(max-width:900px){
+
+.title{
+
+font-size:26px;
+
+}
+
+.grid-top{
+
+grid-template-columns:1fr;
+
+}
+
+.bottom-grid{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+#chart{
+
+height:520px;
+
+}
+
+}
+
+</style>
+
 </head>
 <body>
 
 <div class="container">
-    <div class="title">JANAKA SMC DASHBOARD V6 PRO</div>
-    
+
+    <div class="title">
+        JANAKA SMC DASHBOARD V6 PRO
+    </div>
+
     <div class="grid-top">
+
         <div class="card">
+
             <h3>📊 SELECT MARKET</h3>
+
             <select id="market">
+
                 <option value="R_10">Volatility 10</option>
                 <option value="R_25">Volatility 25</option>
                 <option value="R_50" selected>Volatility 50</option>
                 <option value="R_75">Volatility 75</option>
                 <option value="R_100">Volatility 100</option>
-                <option value="1HZ10V">Volatility 10 (1s)</option>
-                <option value="1HZ100V">Volatility 100 (1s)</option>
+
+                <option value="JD10">Jump 10</option>
+                <option value="JD25">Jump 25</option>
+                <option value="JD50">Jump 50</option>
+                <option value="JD75">Jump 75</option>
+                <option value="JD100">Jump 100</option>
+
+                <option value="RDBEAR">Bear Market</option>
+                <option value="RDBULL">Bull Market</option>
+
                 <option value="frxEURUSD">EUR / USD</option>
+                <option value="frxGBPUSD">GBP / USD</option>
+                <option value="frxUSDJPY">USD / JPY</option>
+                <option value="frxAUDUSD">AUD / USD</option>
+
             </select>
+
         </div>
+
         <div class="card">
+
             <h3>🌐 CONNECTION STATUS</h3>
+
             <div class="status">
-                Status : <span id="status" style="color:orange;">Connecting...</span><br>
-                Market : <span id="marketName">Volatility 50</span>
+
+                Status :
+                <span id="status">
+                    Connecting...
+                </span>
+
+                <br><br>
+
+                Market :
+                <span id="marketName">
+                    Volatility 50
+                </span>
+
             </div>
+
         </div>
+
     </div>
 
-    <div class="card">
+    <div class="card chart-card">
+
+        <div class="chart-title">
+            📈 LIVE MARKET CHART
+        </div>
+
         <div id="chart"></div>
+
     </div>
 
     <div class="bottom-grid">
+
         <div class="info-box">
-            <div class="info-title">📈 MARKET TREND</div>
-            <div class="info-value" id="trend">STABLE</div>
+
+            <div class="info-title">
+                📈 MARKET TREND
+            </div>
+
+            <div class="info-value green" id="trend">
+                WAIT
+            </div>
+
         </div>
+
         <div class="info-box">
-            <div class="info-title">⚡ SYSTEM STATUS</div>
-            <div class="info-value" id="systemStatus" style="color:var(--blue);">READY</div>
+
+            <div class="info-title">
+                ⚡ SYSTEM STATUS
+            </div>
+
+            <div class="info-value cyan" id="systemStatus">
+                READY
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
-<script>
-    const APP_ID = "1089"; 
-    let currentMarket = "R_50";
-    let ws, chart, candleSeries;
+    <script>
 
-    function initChart() {
-        const chartElement = document.getElementById('chart');
-        chart = LightweightCharts.createChart(chartElement, {
-            layout: { background: { color: '#0A1322' }, textColor: '#94A3B8' },
-            grid: { vertLines: { color: '#1E293B' }, horzLines: { color: '#1E293B' } },
-            timeScale: { timeVisible: true, secondsVisible: false },
-        });
-        candleSeries = chart.addCandlestickSeries({
-            upColor: '#00FF88', downColor: '#FF4D4D',
-            borderUpColor: '#00FF88', borderDownColor: '#FF4D4D',
-            wickUpColor: '#00FF88', wickDownColor: '#FF4D4D',
-        });
+/*=========================================
+            CONFIG
+=========================================*/
 
-        // Resize function
-        window.addEventListener('resize', () => {
-            chart.applyOptions({ width: chartElement.clientWidth });
-        });
+const APP_ID = "1089";
+
+const TIMEFRAME = 60;
+
+const MAX_CANDLES = 300;
+
+
+/*=========================================
+        GLOBAL VARIABLES
+=========================================*/
+
+let ws = null;
+
+let chart = null;
+
+let candleSeries = null;
+
+let candles = [];
+
+let currentMarket = "R_50";
+
+
+/*=========================================
+            DOM
+=========================================*/
+
+const marketSelect = document.getElementById("market");
+
+const marketName = document.getElementById("marketName");
+
+const status = document.getElementById("status");
+
+const trend = document.getElementById("trend");
+
+const systemStatus =
+document.getElementById("systemStatus");
+
+const chartContainer =
+document.getElementById("chart");
+
+
+/*=========================================
+        CREATE CHART
+=========================================*/
+
+function createChart(){
+
+chart = LightweightCharts.createChart(chartContainer,{
+
+layout:{
+
+background:{
+color:"#05070A"
+},
+
+textColor:"#E5E7EB"
+
+},
+
+grid:{
+
+vertLines:{
+color:"#162033"
+},
+
+horzLines:{
+color:"#162033"
+}
+
+},
+
+rightPriceScale:{
+
+borderColor:"#253244"
+
+},
+
+timeScale:{
+
+borderColor:"#253244",
+
+timeVisible:true,
+
+secondsVisible:false
+
+},
+
+crosshair:{
+
+mode:1
+
+},
+
+width:chartContainer.clientWidth,
+
+height:560
+
+});
+
+
+candleSeries = chart.addCandlestickSeries({
+
+upColor:"#00FF88",
+
+downColor:"#FF4D4D",
+
+borderUpColor:"#00FF88",
+
+borderDownColor:"#FF4D4D",
+
+wickUpColor:"#00FF88",
+
+wickDownColor:"#FF4D4D"
+
+});
+
+
+window.addEventListener("resize",()=>{
+
+chart.applyOptions({
+
+width:chartContainer.clientWidth
+
+});
+
+});
+
+}
+
+
+/*=========================================
+        START APP
+=========================================*/
+
+createChart();
+
+status.innerHTML="READY";
+
+systemStatus.innerHTML="INITIALIZED";
+
+marketName.innerHTML="Volatility 50";
+    
+        
+/*=========================================
+        CONNECT TO DERIV
+=========================================*/
+
+function connectDeriv(){
+
+    status.innerHTML = "CONNECTING...";
+    systemStatus.innerHTML = "LOADING";
+
+    if(ws){
+        ws.close();
     }
 
-    function connect() {
-        if (ws) ws.close();
-        ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
+    ws = new WebSocket(
+        "wss://ws.derivws.com/websockets/v3?app_id=1089"
+    );
 
-        ws.onopen = () => {
-            document.getElementById('status').innerText = "ONLINE";
-            document.getElementById('status').style.color = "var(--green)";
+    ws.onopen = () => {
+
+        status.innerHTML = "ONLINE";
+        systemStatus.innerHTML = "CONNECTED";
+
+        ws.send(JSON.stringify({
+            ticks_history: currentMarket,
+            adjust_start_time: 1,
+            count: 300,
+            end: "latest",
+            granularity: 60,
+            style: "candles"
+            
+        }));
+
+    };
+
+    ws.onmessage = (msg) => {
+
+        const data = JSON.parse(msg.data);
+
+        if(data.candles){
+
+            candles = data.candles.map(c => ({
+                time: c.epoch,
+                open: Number(c.open),
+                high: Number(c.high),
+                low: Number(c.low),
+                close: Number(c.close)
+            }));
+
+            candleSeries.setData(candles);
+
             ws.send(JSON.stringify({
-                ticks_history: currentMarket,
-                adjust_start_time: 1,
-                count: 500,
-                end: "latest",
-                granularity: 60,
-                style: "candles",
+                ticks: currentMarket,
                 subscribe: 1
             }));
+
+            systemStatus.innerHTML = "LIVE";
+        }
+
+        if(data.tick){
+
+    let price = Number(data.tick.quote);
+    let epoch = data.tick.epoch;
+
+    let candleTime =
+    Math.floor(epoch / TIMEFRAME) * TIMEFRAME;
+
+    let last =
+    candles[candles.length - 1];
+
+    if(!last) return;
+
+    if(last.time === candleTime){
+
+        last.close = price;
+
+        if(price > last.high)
+            last.high = price;
+
+        if(price < last.low)
+            last.low = price;
+
+        candleSeries.update(last);
+
+    }else{
+
+        let newCandle = {
+
+            time: candleTime,
+            open: last.close,
+            high: price,
+            low: price,
+            close: price
+
         };
 
-        ws.onmessage = (msg) => {
-            const data = JSON.parse(msg.data);
-            
-            // පරණ data load කිරීම
-            if (data.candles) {
-                const history = data.candles.map(c => ({
-                    time: parseInt(c.epoch),
-                    open: parseFloat(c.open),
-                    high: parseFloat(c.high),
-                    low: parseFloat(c.low),
-                    close: parseFloat(c.close)
-                }));
-                candleSeries.setData(history);
-            }
+        candles.push(newCandle);
 
-            // Live candle update (මිල වෙනස් වීම)
-            if (data.ohlc) {
-                const o = data.ohlc;
-                candleSeries.update({
-                    time: parseInt(o.open_time),
-                    open: parseFloat(o.open),
-                    high: parseFloat(o.high),
-                    low: parseFloat(o.low),
-                    close: parseFloat(o.close)
-                });
-                
-                // Trend Update
-                const trend = document.getElementById('trend');
-                if(o.close > o.open) {
-                    trend.innerText = "BULLISH";
-                    trend.style.color = "var(--green)";
-                } else {
-                    trend.innerText = "BEARISH";
-                    trend.style.color = "var(--red)";
-                }
-            }
-        };
+        if(candles.length > 300)
+            candles.shift();
 
-        ws.onclose = () => {
-            document.getElementById('status').innerText = "OFFLINE";
-            setTimeout(connect, 3000);
-        };
+        candleSeries.update(newCandle);
+
     }
 
-    document.getElementById('market').addEventListener('change', (e) => {
-        currentMarket = e.target.value;
-        document.getElementById('marketName').innerText = e.target.options[e.target.selectedIndex].text;
-        connect();
-    });
+}
 
-    initChart();
-    connect();
+            
+            
+
+                
+                
+
+    };
+
+    ws.onerror = () => {
+
+        status.innerHTML = "ERROR";
+        systemStatus.innerHTML = "FAILED";
+
+    };
+
+    ws.onclose = () => {
+
+        status.innerHTML = "OFFLINE";
+        systemStatus.innerHTML = "DISCONNECTED";
+
+    };
+
+}
+
+        
+            
+
+                
+
+            
+
+        
+            
+
+        
+
+        
+
+    
+
+    
+        connectDeriv();
 </script>
+    
 </body>
+
 </html>
