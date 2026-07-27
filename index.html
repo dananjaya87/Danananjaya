@@ -3,322 +3,284 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JANAKA SMC DASHBOARD V6 PRO - AI INTEGRATED</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<title>JANAKA SMC DASHBOARD V6 PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <style>
-*{ margin:0; padding:0; box-sizing:border-box; }
-:root{
---bg:#05070A; --card:#111827; --border:#233044; --green:#00FF88; --red:#FF4D4D; --blue:#38BDF8; --text:#FFFFFF; --muted:#94A3B8;
---glow-green: 0 0 15px rgba(0, 255, 136, 0.4); --glow-red: 0 0 15px rgba(255, 77, 77, 0.4);
-}
-body{ background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); padding:16px; overflow-x:hidden; }
-.container{ width:100%; max-width:1700px; margin:auto; }
-.title{ font-size:32px; font-weight:800; text-align:center; letter-spacing:2px; margin-bottom:20px; color:var(--green); text-shadow: 0 0 8px rgba(0,255,136,.6); }
+    :root {
+        --bg: #05070A; --card: #0F172A; --border: #1E293B;
+        --green: #00FF88; --red: #FF4D4D; --blue: #38BDF8; --text: #F8FAFC;
+        --muted: #94A3B8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); 
+        padding: 10px; overflow-x: hidden;
+    }
+    .container { width: 100%; max-width: 1400px; margin: auto; }
+    
+    .header { text-align: center; padding: 15px 0; }
+    .title { 
+        font-size: 24px; font-weight: 800; color: var(--green); 
+        text-shadow: 0 0 10px rgba(0,255,136,0.3); letter-spacing: 1px;
+    }
 
-/* Layout Grid */
-.main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; margin-bottom: 18px; }
+    /* Top Controls */
+    .top-grid { 
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; 
+    }
+    .card { 
+        background: var(--card); border: 1px solid var(--border); 
+        border-radius: 12px; padding: 12px; 
+    }
+    .card h3 { font-size: 13px; color: var(--blue); margin-bottom: 8px; text-transform: uppercase; }
 
-.card{ background:linear-gradient(180deg, #111827, #0B1220); border:1px solid var(--border); border-radius:20px; padding:18px; box-shadow: 0 12px 25px rgba(0,0,0,.35); }
-.card h3{ font-size:17px; font-weight:700; color:var(--blue); margin-bottom:14px; }
+    select { 
+        width: 100%; padding: 10px; background: #070E1A; color: white; 
+        border: 1px solid #334155; border-radius: 8px; font-size: 14px; outline: none;
+    }
 
-/* LED Panel Styles */
-.led-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
-.led-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--muted); }
-.led-dot { width: 12px; height: 12px; border-radius: 50%; background: #1e293b; transition: 0.3s; }
-.led-dot.on-blue { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
-.led-dot.on-green { background: var(--green); box-shadow: var(--glow-green); }
-.led-dot.on-red { background: var(--red); box-shadow: var(--glow-red); }
+    /* Chart Main Box */
+    .chart-container { 
+        width: 100%; height: 450px; background: var(--card); 
+        border: 1px solid var(--border); border-radius: 15px; overflow: hidden;
+        margin-bottom: 15px; position: relative;
+    }
+    #chart { width: 100%; height: 100%; }
 
-#signal-box { text-align: center; padding: 20px; border-radius: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); margin-top: 15px; transition: 0.5s; }
-.sig-val { font-size: 28px; font-weight: 800; color: var(--muted); }
+    /* AI Signal Section Below Chart */
+    .ai-section { 
+        display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; margin-bottom: 10px;
+    }
+    
+    .led-group { display: flex; flex-direction: column; gap: 8px; }
+    .led-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+    .led-dot { width: 10px; height: 10px; border-radius: 50%; background: #1e293b; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+    .led-dot.on-blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+    .led-dot.on-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .led-dot.on-red { background: var(--red); box-shadow: 0 0 8px var(--red); }
 
-/* Original Select & Chart Styles */
-select{ width:100%; height:56px; background:#08111F; color:white; border:1px solid #334155; border-radius:14px; padding:0 16px; font-size:17px; outline:none; }
-#chart{ width:100%; height:560px; border-radius:16px; overflow:hidden; background:#0A1322; border:1px solid var(--border); }
+    #signal-box { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px dashed var(--border);
+    }
+    .sig-val { font-size: 28px; font-weight: 800; color: var(--muted); }
+    .sig-str { font-size: 11px; color: var(--blue); margin-top: 4px; font-family: 'JetBrains Mono'; }
 
-.grid-top{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:18px; }
-.bottom-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-top:18px; }
-.info-box{ background:linear-gradient(180deg, #111827, #0A1322); border:1px solid var(--border); border-radius:18px; padding:22px; text-align:center; }
-.info-title{ font-size:14px; font-weight:600; color:var(--muted); margin-bottom:12px; }
-.info-value{ font-size:30px; font-weight:700; font-family:'JetBrains Mono', monospace; }
+    /* Bottom Stats */
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .info-box { 
+        background: var(--card); border: 1px solid var(--border); 
+        border-radius: 12px; padding: 15px; text-align: center;
+    }
+    .info-title { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+    .info-value { font-size: 20px; font-weight: 700; }
 
-@media(max-width:900px){ .main-grid { grid-template-columns: 1fr; } .grid-top, .bottom-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+        .chart-container { height: 350px; }
+        .ai-section { grid-template-columns: 1fr; }
+        .title { font-size: 18px; }
+    }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="title">JANAKA SMC DASHBOARD V6 PRO</div>
+    <div class="header">
+        <div class="title">JANAKA SMC DASHBOARD V6 PRO</div>
+    </div>
 
-    <div class="main-grid">
-        <!-- AI Signal Side Panel -->
-        <div class="side-panel">
-            <div class="card">
-                <h3>🔍 AI CONFLUENCE</h3>
-                <div class="led-group">
-                    <div class="led-row">Key Level Reached <div id="led-1" class="led-dot"></div></div>
-                    <div class="led-row">Momentum (3+ Candles) <div id="led-2" class="led-dot"></div></div>
-                    <div class="led-row">Hidden Open Finder <div id="led-3" class="led-dot"></div></div>
-                    <div class="led-row">FVG / Imbalance Fill <div id="led-4" class="led-dot"></div></div>
-                    <div class="led-row">Trigger (Engulfing) <div id="led-5" class="led-dot"></div></div>
-                </div>
-                <div id="signal-box">
-                    <div style="font-size: 11px; color: var(--muted); margin-bottom: 5px;">AI ENGINE STATUS</div>
-                    <div id="sig-val" class="sig-val">WAIT</div>
-                    <div id="sig-str" style="font-size: 12px; color: var(--blue); margin-top: 5px;">CONFIRMING: 0%</div>
-                </div>
-            </div>
-            
-            <div class="card" style="margin-top: 18px;">
-                <h3>⚙️ SETTINGS</h3>
-                <div style="font-size: 13px; color: var(--muted);">Voice Alerts: <span style="color: var(--green);">ENABLED</span></div>
-            </div>
+    <!-- Controls -->
+    <div class="top-grid">
+        <div class="card">
+            <h3>MARKET</h3>
+            <select id="market">
+                <option value="R_50" selected>Volatility 50</option>
+                <option value="R_10">Volatility 10</option>
+                <option value="R_25">Volatility 25</option>
+                <option value="R_75">Volatility 75</option>
+                <option value="R_100">Volatility 100</option>
+                <option value="JD50">Jump 50</option>
+            </select>
         </div>
-
-        <!-- Main Chart & Controls -->
-        <div class="chart-area">
-            <div class="grid-top">
-                <div class="card">
-                    <h3>📊 SELECT MARKET</h3>
-                    <select id="market">
-                        <option value="R_10">Volatility 10</option>
-                        <option value="R_25">Volatility 25</option>
-                        <option value="R_50" selected>Volatility 50</option>
-                        <option value="R_75">Volatility 75</option>
-                        <option value="R_100">Volatility 100</option>
-                        <option value="JD10">Jump 10</option>
-                        <option value="JD25">Jump 25</option>
-                        <option value="JD50">Jump 50</option>
-                        <option value="JD75">Jump 75</option>
-                        <option value="JD100">Jump 100</option>
-                        <option value="RDBEAR">Bear Market</option>
-                        <option value="RDBULL">Bull Market</option>
-                        <option value="frxEURUSD">EUR / USD</option>
-                        <option value="frxGBPUSD">GBP / USD</option>
-                        <option value="frxUSDJPY">USD / JPY</option>
-                        <option value="frxAUDUSD">AUD / USD</option>
-                    </select>
-                </div>
-                <div class="card">
-                    <h3>🌐 CONNECTION STATUS</h3>
-                    <div style="font-size:17px;">Status: <span id="status" style="color:var(--green);">Connecting...</span><br>
-                    Market: <span id="marketName" style="color:var(--green);">Volatility 50</span></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>📈 LIVE MARKET CHART</h3>
-                <div id="chart"></div>
-            </div>
+        <div class="card">
+            <h3>STATUS</h3>
+            <div id="status" style="color:var(--green); font-size: 14px; font-weight: 600;">CONNECTING...</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Voice: <span style="color:var(--green)">ON</span></div>
         </div>
     </div>
 
+    <!-- Main Chart -->
+    <div class="chart-container">
+        <div id="chart"></div>
+    </div>
+
+    <!-- AI Signal Logic Box -->
+    <div class="ai-section">
+        <div class="card">
+            <h3>🔍 AI CONFLUENCE</h3>
+            <div class="led-group">
+                <div class="led-row">Key Level <div id="led-1" class="led-dot"></div></div>
+                <div class="led-row">Momentum <div id="led-2" class="led-dot"></div></div>
+                <div class="led-row">Hidden Open <div id="led-3" class="led-dot"></div></div>
+                <div class="led-row">FVG Gap <div id="led-4" class="led-dot"></div></div>
+            </div>
+        </div>
+        <div id="signal-box" class="card">
+            <div class="sig-val" id="sig-val">WAIT</div>
+            <div class="sig-str" id="sig-str">ANALYZING: 0%</div>
+        </div>
+    </div>
+
+    <!-- Bottom Data -->
     <div class="bottom-grid">
         <div class="info-box">
-            <div class="info-title">📈 MARKET TREND</div>
-            <div class="info-value" id="trend" style="color:var(--green);">WAIT</div>
+            <div class="info-title">MARKET TREND</div>
+            <div class="info-value" id="trend" style="color:var(--muted);">WAIT</div>
         </div>
         <div class="info-box">
-            <div class="info-title">⚡ SYSTEM STATUS</div>
+            <div class="info-title">SMC SYSTEM</div>
             <div class="info-value" id="systemStatus" style="color:var(--blue);">READY</div>
         </div>
     </div>
 </div>
 
 <script>
-/*=========================================
-            CONFIG & GLOBALS
-=========================================*/
 const APP_ID = "1089";
-const TIMEFRAME = 60;
 let ws = null;
 let chart, candleSeries, trendSeries;
 let candles = [];
 let currentMarket = "R_50";
-let resistanceLine = null, supportLine = null;
+let resLine = null, supLine = null;
 
-// Voice Alert Function
 function announce(text) {
     const msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 1.0;
     window.speechSynthesis.speak(msg);
 }
 
-/*=========================================
-        AI SIGNAL LOGIC (NEW)
-=========================================*/
-function runSignalEngine() {
-    if (candles.length < 10) return;
+function initChart() {
+    const chartElement = document.getElementById("chart");
+    chart = LightweightCharts.createChart(chartElement, {
+        layout: { background: { color: "#0F172A" }, textColor: "#94A3B8" },
+        grid: { vertLines: { color: "#1E293B" }, horzLines: { color: "#1E293B" } },
+        timeScale: { borderColor: "#334155", timeVisible: true, secondsVisible: false },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    candleSeries = chart.addCandlestickSeries({ 
+        upColor: "#00FF88", downColor: "#FF4D4D", borderVisible: false, 
+        wickUpColor: "#00FF88", wickDownColor: "#FF4D4D" 
+    });
+    trendSeries = chart.addLineSeries({ color: 'rgba(56, 189, 248, 0.3)', lineWidth: 1 });
+    
+    window.addEventListener('resize', () => {
+        chart.applyOptions({ width: chartElement.clientWidth, height: chartElement.clientHeight });
+    });
+}
+
+function runAI() {
+    if (candles.length < 15) return;
     const curr = candles[candles.length - 1];
     const prev = candles[candles.length - 2];
-    const p2 = candles[candles.length - 3];
-    const p3 = candles[candles.length - 4];
-
     let score = 0;
 
-    // 1. Key Level
-    let atKey = false;
-    if(resistanceLine && Math.abs(curr.close - resistanceLine.options().price) < (curr.high-curr.low)) atKey = true;
-    if(supportLine && Math.abs(curr.close - supportLine.options().price) < (curr.high-curr.low)) atKey = true;
-    document.getElementById('led-1').className = atKey ? 'led-dot on-blue' : 'led-dot';
-    if(atKey) score++;
+    // Confluence Checks
+    const atRes = resLine && Math.abs(curr.close - resLine.options().price) < (curr.high-curr.low);
+    const atSup = supLine && Math.abs(curr.close - supLine.options().price) < (curr.high-curr.low);
+    document.getElementById('led-1').className = (atRes || atSup) ? 'led-dot on-blue' : 'led-dot';
+    if(atRes || atSup) score++;
 
-    // 2. Momentum
-    const redSeq = prev.close < prev.open && p2.close < p2.open && p3.close < p3.open;
-    const greenSeq = prev.close > prev.open && p2.close > p2.open && p3.close > p3.open;
-    document.getElementById('led-2').className = (redSeq || greenSeq) ? 'led-dot on-blue' : 'led-dot';
-    if(redSeq || greenSeq) score++;
+    const mom = Math.abs(curr.close - candles[candles.length-4].close) > (curr.high-curr.low)*2;
+    document.getElementById('led-2').className = mom ? 'led-dot on-blue' : 'led-dot';
+    if(mom) score++;
 
-    // 3. Hidden Open
-    const isImpulse = Math.abs(p3.open - p3.close) > (Math.abs(prev.open - prev.close)*1.5);
-    document.getElementById('led-3').className = isImpulse ? 'led-dot on-blue' : 'led-dot';
-    if(isImpulse) score++;
+    const isBig = Math.abs(curr.close - curr.open) > Math.abs(prev.close - prev.open)*1.5;
+    document.getElementById('led-3').className = isBig ? 'led-dot on-blue' : 'led-dot';
+    if(isBig) score++;
 
-    // 4. FVG
-    const fvg = (p3.high < prev.low) || (p3.low > prev.high);
+    const fvg = Math.abs(candles[candles.length-3].high - prev.low) > 0;
     document.getElementById('led-4').className = fvg ? 'led-dot on-blue' : 'led-dot';
     if(fvg) score++;
 
-    // 5. Trigger
-    const bullEng = curr.close > curr.open && curr.close > prev.open && prev.close < prev.open;
-    const bearEng = curr.close < curr.open && curr.close < prev.open && prev.close > prev.open;
-    
-    const sigBox = document.getElementById('signal-box');
-    const sigVal = document.getElementById('sig-val');
-    const sigStr = document.getElementById('sig-str');
+    let pct = Math.round((score/4)*100);
+    document.getElementById('sig-str').innerText = `CONFIRMING: ${pct}%`;
 
-    if (bullEng) { document.getElementById('led-5').className = 'led-dot on-green'; }
-    else if (bearEng) { document.getElementById('led-5').className = 'led-dot on-red'; }
-    else { document.getElementById('led-5').className = 'led-dot'; }
+    const bull = curr.close > curr.open && curr.close > prev.high && score >= 2;
+    const bear = curr.close < curr.open && curr.close < prev.low && score >= 2;
 
-    let totalMatch = Math.round((score / 4) * 100);
-    sigStr.innerText = `CONFIRMING: ${totalMatch}%`;
-
-    if (totalMatch >= 75 && (bullEng || bearEng)) {
-        let type = bullEng ? "BUY" : "SELL";
-        sigVal.innerText = type;
-        sigVal.style.color = bullEng ? "var(--green)" : "var(--red)";
-        sigBox.style.borderColor = bullEng ? "var(--green)" : "var(--red)";
-        
-        if(window.lastAlertTime !== curr.time) {
-            announce(`${type} signal detected. High success probability.`);
-            window.lastAlertTime = curr.time;
-        }
-    } else {
-        sigVal.innerText = "WAIT";
-        sigVal.style.color = "var(--muted)";
-        sigBox.style.borderColor = "var(--border)";
+    const val = document.getElementById('sig-val');
+    if(bull) { 
+        val.innerText = "BUY"; val.style.color = "var(--green)"; 
+        if(window.lastT !== curr.time) { announce("Strong Buy Signal"); window.lastT = curr.time; }
+    } else if(bear) { 
+        val.innerText = "SELL"; val.style.color = "var(--red)"; 
+        if(window.lastT !== curr.time) { announce("Strong Sell Signal"); window.lastT = curr.time; }
+    } else { 
+        val.innerText = "WAIT"; val.style.color = "var(--muted)"; 
     }
 }
 
-/*=========================================
-    ORIGINAL SMC LOGIC (100% PRESERVED)
-=========================================*/
-function calculateSMC() {
+function updateSMC() {
     if (candles.length < 20) return;
     let markers = [];
-    let swings = [];
-    const windowSize = 4;
-
-    for (let i = windowSize; i < candles.length - windowSize; i++) {
-        let isHigh = true, isLow = true;
-        for (let j = 1; j <= windowSize; j++) {
-            if (candles[i].high < candles[i-j].high || candles[i].high < candles[i+j].high) isHigh = false;
-            if (candles[i].low > candles[i-j].low || candles[i].low > candles[i+j].low) isLow = false;
-        }
-        if (isHigh) swings.push({ type: 'H', price: candles[i].high, time: candles[i].time });
-        if (isLow) swings.push({ type: 'L', price: candles[i].low, time: candles[i].time });
-    }
-
-    if (swings.length < 3) return;
-    let lastH = null, lastL = null, currentDir = "";
-    let lineData = [];
-
-    swings.forEach((s) => {
-        let label = ""; let color = "#FFFFFF";
-        if (s.type === 'H') {
-            if (lastH && s.price > lastH.price) { label = "HH"; color = "#00FF88"; markers.push({ time: s.time, position: 'aboveBar', color: '#FFD700', shape: 'arrowDown', text: 'BOS' }); currentDir = "UPTREND"; }
-            else if (lastH && s.price < lastH.price) { label = "LH"; color = "#FF4D4D"; if(currentDir === "UPTREND") markers.push({ time: s.time, position: 'aboveBar', color: '#FF00FF', shape: 'arrowDown', text: 'CHOCH' }); currentDir = "DOWNTREND"; }
-            lastH = s;
-        } else {
-            if (lastL && s.price < lastL.price) { label = "LL"; color = "#FF4D4D"; markers.push({ time: s.time, position: 'belowBar', color: '#FFD700', shape: 'arrowUp', text: 'BOS' }); }
-            else if (lastL && s.price > lastL.price) { label = "HL"; color = "#00FF88"; if(currentDir === "DOWNTREND") markers.push({ time: s.time, position: 'belowBar', color: '#FF00FF', shape: 'arrowUp', text: 'CHOCH' }); }
-            lastL = s;
-        }
-        if (label !== "") markers.push({ time: s.time, position: s.type === 'H' ? 'aboveBar' : 'belowBar', color: color, shape: 'text', text: label });
-        lineData.push({ time: s.time, value: s.price });
+    let high = candles[0].high, low = candles[0].low;
+    
+    candles.forEach(c => {
+        if(c.high > high) high = c.high;
+        if(c.low < low) low = c.low;
     });
 
-    candleSeries.setMarkers(markers);
-    trendSeries.setData(lineData);
-    document.getElementById('trend').innerText = currentDir || "ANALYZING";
-    document.getElementById('trend').style.color = currentDir === "UPTREND" ? "#00FF88" : "#FF4D4D";
+    if(resLine) candleSeries.removePriceLine(resLine);
+    if(supLine) candleSeries.removePriceLine(supLine);
+    
+    resLine = candleSeries.createPriceLine({ price: high, color: '#FF4D4D', lineWidth: 1, lineStyle: 2, title: 'RES' });
+    supLine = candleSeries.createPriceLine({ price: low, color: '#00FF88', lineWidth: 1, lineStyle: 2, title: 'SUP' });
 
-    if (resistanceLine) candleSeries.removePriceLine(resistanceLine);
-    if (supportLine) candleSeries.removePriceLine(supportLine);
-
-    const highSwings = swings.filter(s => s.type === 'H');
-    const lowSwings = swings.filter(s => s.type === 'L');
-
-    if (highSwings.length >= 1) resistanceLine = candleSeries.createPriceLine({ price: highSwings[highSwings.length-1].price, color: '#FF4D4D', lineWidth: 2, title: 'RESISTANCE' });
-    if (lowSwings.length >= 1) supportLine = candleSeries.createPriceLine({ price: lowSwings[lowSwings.length-1].price, color: '#00FF88', lineWidth: 2, title: 'SUPPORT' });
-
-    runSignalEngine();
+    const trend = candles[candles.length-1].close > candles[candles.length-10].close ? "UPTREND" : "DOWNTREND";
+    document.getElementById('trend').innerText = trend;
+    document.getElementById('trend').style.color = trend === "UPTREND" ? "var(--green)" : "var(--red)";
+    
+    runAI();
 }
 
-/*=========================================
-        CHART & CONNECTION
-=========================================*/
-function createChart(){
-    chart = LightweightCharts.createChart(document.getElementById("chart"),{
-        layout:{ background:{ color:"#05070A" }, textColor:"#E5E7EB" },
-        grid:{ vertLines:{ color:"#162033" }, horzLines:{ color:"#162033" } },
-        timeScale:{ borderColor:"#253244", timeVisible:true }
-    });
-    candleSeries = chart.addCandlestickSeries({ upColor:"#00FF88", downColor:"#FF4D4D", borderVisible:false, wickUpColor:"#00FF88", wickDownColor:"#FF4D4D" });
-    trendSeries = chart.addLineSeries({ color: 'rgba(56, 189, 248, 0.4)', lineWidth: 1, lineStyle: 2 });
-}
-
-function connectDeriv() {
-    document.getElementById("status").innerHTML = "CONNECTING...";
+function connect() {
     if (ws) ws.close();
-    ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
+    ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=" + APP_ID);
     ws.onopen = () => {
-        document.getElementById("status").innerHTML = "ONLINE";
-        ws.send(JSON.stringify({ ticks_history: currentMarket, count: 300, granularity: TIMEFRAME, style: "candles" }));
+        document.getElementById("status").innerText = "ONLINE";
+        ws.send(JSON.stringify({ ticks_history: currentMarket, count: 300, granularity: 60, style: "candles" }));
     };
     ws.onmessage = (msg) => {
-        const data = JSON.parse(msg.data);
-        if (data.candles) {
-            candles = data.candles.map(c => ({ time: Number(c.epoch), open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close) }));
+        const res = JSON.parse(msg.data);
+        if (res.candles) {
+            candles = res.candles.map(c => ({ time: c.epoch, open: +c.open, high: +c.high, low: +c.low, close: +c.close }));
             candleSeries.setData(candles);
-            calculateSMC();
+            updateSMC();
             ws.send(JSON.stringify({ ticks: currentMarket, subscribe: 1 }));
         }
-        if (data.tick) {
-            let last = candles[candles.length - 1];
-            let price = Number(data.tick.quote);
-            let time = Math.floor(data.tick.epoch / TIMEFRAME) * TIMEFRAME;
-            if (time === last.time) { last.close = price; last.high = Math.max(last.high, price); last.low = Math.min(last.low, price); }
-            else { let newC = { time, open: price, high: price, low: price, close: price }; candles.push(newC); candles.shift(); }
+        if (res.tick) {
+            const last = candles[candles.length - 1];
+            const price = +res.tick.quote;
+            const time = Math.floor(res.tick.epoch / 60) * 60;
+            if (time === last.time) {
+                last.close = price; last.high = Math.max(last.high, price); last.low = Math.min(last.low, price);
+            } else {
+                const newC = { time, open: price, high: price, low: price, close: price };
+                candles.push(newC); candles.shift();
+            }
             candleSeries.update(candles[candles.length-1]);
-            calculateSMC();
+            updateSMC();
         }
     };
 }
 
-document.getElementById("market").addEventListener("change", (e) => {
+document.getElementById("market").onchange = (e) => {
     currentMarket = e.target.value;
-    document.getElementById("marketName").innerHTML = e.target.options[e.target.selectedIndex].text;
-    connectDeriv();
-});
+    connect();
+};
 
-createChart();
-connectDeriv();
+initChart();
+connect();
 </script>
 </body>
 </html>
