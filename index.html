@@ -32,6 +32,28 @@ select:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,.3);}
 .info-value{font-size:30px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .green{color:var(--green);}.cyan{color:var(--blue);}.red{color:var(--red);}
 
+/* SOUND CONTROL STYLES */
+.sound-controls {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.toggle-switch {
+    width: 40px; height: 20px; background: #334155; border-radius: 20px; position: relative; transition: .3s;
+}
+.toggle-switch::before {
+    content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%;
+    top: 2px; left: 2px; transition: .3s;
+}
+#soundToggle:checked + .toggle-switch { background: var(--green); }
+#soundToggle:checked + .toggle-switch::before { left: 22px; }
+.volume-slider { flex-grow: 1; height: 6px; border-radius: 5px; background: #334155; outline: none; -webkit-appearance: none; }
+.volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--blue); border-radius: 50%; cursor: pointer; }
+
 /* SIGNAL ALERT ANIMATIONS */
 @keyframes pulse-red {
     0% { border-color: var(--red); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
@@ -77,6 +99,19 @@ select:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,.3);}
         <div class="card">
             <h3>🌐 CONNECTION STATUS</h3>
             <div class="status">Status : <span id="status">Connecting...</span><br>Market : <span id="marketName">Volatility 50</span></div>
+            
+            <!-- SOUND CONTROLS ADDED HERE -->
+            <div class="sound-controls">
+                <label class="toggle-container">
+                    <input type="checkbox" id="soundToggle" style="display:none" checked>
+                    <div class="toggle-switch"></div>
+                    <span style="font-size:14px; font-weight:600;">🔊 Sound</span>
+                </label>
+                <div style="display:flex; align-items:center; gap:10px; flex-grow:1;">
+                    <span style="font-size:14px;">🔈</span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="0.8">
+                </div>
+            </div>
         </div>
     </div>
     <div class="card chart-card">
@@ -149,6 +184,19 @@ let signalStorage = {
     history: []
 };
 
+// --- ALARM FUNCTIONS ---
+function playVoiceAlert(type) {
+    const isSoundOn = document.getElementById("soundToggle").checked;
+    const volume = document.getElementById("volumeSlider").value;
+    
+    if (isSoundOn) {
+        const marketName = document.getElementById("market").options[document.getElementById("market").selectedIndex].text;
+        const msg = new SpeechSynthesisUtterance(`New ${type} Signal for ${marketName}`);
+        msg.volume = volume;
+        window.speechSynthesis.speak(msg);
+    }
+}
+
 function initStorage() {
     const saved = localStorage.getItem('janaka_smc_pro_v6');
     if (saved) {
@@ -160,7 +208,6 @@ function initStorage() {
         }
     }
 
-    // --- MARKET එක මතක තබා ගැනීමට එක් කළ කොටස ---
     const savedMarket = localStorage.getItem('janaka_selected_market');
     if (savedMarket) {
         currentMarket = savedMarket;
@@ -168,7 +215,12 @@ function initStorage() {
         marketSelect.value = savedMarket;
         document.getElementById("marketName").innerText = marketSelect.options[marketSelect.selectedIndex].text;
     }
-    // ------------------------------------------
+
+    // Load Sound Settings
+    const savedSound = localStorage.getItem('janaka_sound_enabled');
+    if (savedSound !== null) document.getElementById("soundToggle").checked = savedSound === 'true';
+    const savedVol = localStorage.getItem('janaka_volume');
+    if (savedVol !== null) document.getElementById("volumeSlider").value = savedVol;
 
     renderHistory();
     updateStatsUI();
@@ -194,7 +246,7 @@ function renderHistory() {
         div.style.borderBottom = "1px solid #233044";
         div.style.padding = "5px 0";
         
-        let resColor = "#FFA500"; // Default orange for Pending
+        let resColor = "#FFA500"; 
         if(sig.result === "WIN") resColor = "#00FF88";
         else if(sig.result === "LOSS") resColor = "#FF4D4D";
 
@@ -241,6 +293,9 @@ function drawPocketOptionVisual(type, price, id) {
     activeTradeMarkers.push(visualMarker);
     activeLines.push({ id: id, type: type, entryPrice: price, line: tradeLine });
 
+    // --- VOID ALERT TRIGGERED HERE WHEN WHITE LINE APPEARS ---
+    playVoiceAlert(type);
+
     setTimeout(() => {
         const lastPrice = candles[candles.length - 1].close;
         let isWin = false;
@@ -259,7 +314,7 @@ function drawPocketOptionVisual(type, price, id) {
         candleSeries.removePriceLine(tradeLine);
         activeTradeMarkers = activeTradeMarkers.filter(m => m.id !== id);
         activeLines = activeLines.filter(l => l.id !== id);
-    }, 180000); // 3 Minutes
+    }, 180000); 
 }
 
 function addSignalToHistory(type, conf, entryPrice) {
@@ -355,7 +410,6 @@ function calculateSMC() {
     const prev = candles[candles.length - 2];
     const hiddenOpen = currentDir === "UPTREND" ? last.close > last.open : last.close < last.open;
 
-    // *** ENGULFING LOGIC RESTORED ***
     let hasEngulfing = false;
     if(currentDir === "UPTREND") {
         if(last.close > last.open && prev.close < prev.open && last.close >= prev.open && last.open <= prev.close) hasEngulfing = true;
@@ -392,9 +446,7 @@ function calculateSMC() {
     document.getElementById("signal").innerHTML = signalText;
     document.getElementById("confidence").innerHTML = Math.min(confidence, 100) + "%";
     
-    // UI UPDATED WITH ENGULFING
     document.getElementById("techniquesBox").innerHTML = `Key Level ${hasKeyLevel ? "✅" : "❌"}<br>One Colour ${oneColour ? "✅" : "❌"}<br>Hidden Open ${hiddenOpen ? "✅" : "❌"}<br>FVG ${hasFVG ? "✅" : "❌"}<br>Engulfing ${hasEngulfing ? "✅" : "❌"}`;
-    
     document.getElementById("supportBox").innerHTML = `BOS ${recentBOS ? "✅" : "❌"}<br>CHOCH ${recentCHOCH ? "✅" : "❌"}<br>Trendline ❌`;
     
     candleSeries.setMarkers([...markers, ...activeTradeMarkers]);
@@ -461,14 +513,20 @@ connectDeriv();
 
 document.getElementById("market").addEventListener("change", (e) => {
     currentMarket = e.target.value;
-    // --- මාර්කට් එක සේව් කිරීම ---
     localStorage.setItem('janaka_selected_market', currentMarket);
-    // -------------------------
     document.getElementById("marketName").innerHTML = e.target.options[e.target.selectedIndex].text;
     candles = []; 
     activeTradeMarkers = []; 
     activeLines = []; 
     connectDeriv();
+});
+
+// Save Sound Preferences
+document.getElementById("soundToggle").addEventListener("change", (e) => {
+    localStorage.setItem('janaka_sound_enabled', e.target.checked);
+});
+document.getElementById("volumeSlider").addEventListener("input", (e) => {
+    localStorage.setItem('janaka_volume', e.target.value);
 });
 
 window.addEventListener("resize",()=>{ if(chart) chart.applyOptions({ width:document.getElementById("chart").clientWidth }); });
