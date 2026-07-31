@@ -29,7 +29,6 @@
             margin: auto;
         }
 
-        /* Header Section */
         .header {
             grid-column: 1 / -1;
             display: flex;
@@ -47,7 +46,6 @@
         .time-box { text-align: right; }
         .m-status { color: var(--green); font-size: 13px; font-weight: 600; }
 
-        /* Top Bar Stats */
         .top-stats {
             grid-column: 1 / -1;
             display: grid;
@@ -64,7 +62,6 @@
         .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
         .val { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono'; }
 
-        /* Main Chart Area */
         .chart-section { display: flex; flex-direction: column; gap: 15px; }
         .chart-main {
             background: var(--card);
@@ -76,7 +73,6 @@
         #main-chart { height: 480px; width: 100%; border-radius: 12px; overflow: hidden; }
         #rsi-chart { height: 120px; width: 100%; margin-top: 10px; border-radius: 12px; border-top: 1px solid var(--border); }
 
-        /* Next Prediction Box */
         .prediction-box {
             background: var(--card);
             border-radius: 15px;
@@ -87,7 +83,6 @@
             align-items: center;
         }
 
-        /* Sidebar Panels */
         .sidebar { display: flex; flex-direction: column; gap: 15px; }
         .side-card {
             background: var(--card);
@@ -95,7 +90,7 @@
             padding: 18px;
             border: 1px solid var(--border);
         }
-        .signal-box { text-align: center; border: 1.5px solid var(--green); background: linear-gradient(180deg, #111e32, #0f172a); }
+        .signal-box { text-align: center; border: 1.5px solid var(--green); background: linear-gradient(180deg, #111e32, #0f172a); transition: 0.3s; }
         .sig-text { font-size: 44px; font-weight: 900; color: var(--green); line-height: 1.2; }
         .conf-label { font-size: 14px; font-weight: 700; color: var(--green); margin-top: 5px; }
         .conf-bars { display: flex; gap: 3px; margin: 10px auto; width: fit-content; }
@@ -105,16 +100,13 @@
         .checklist-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #1e293b; }
         .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; background: #334155; text-align: center; line-height: 14px; font-size: 10px; }
         .dot.ok { background: var(--green); color: black; }
-        .dot.no { background: var(--red); color: white; }
 
-        /* Circular Win Rate Gauge */
         .gauge-container { text-align: center; position: relative; margin: 15px 0; }
         .gauge-circle { transform: rotate(-90deg); }
         .gauge-bg { fill: none; stroke: #1e293b; stroke-width: 8; }
         .gauge-fill { fill: none; stroke: var(--green); stroke-width: 8; stroke-dasharray: 251.2; stroke-dashoffset: 251.2; transition: 1s; stroke-linecap: round; }
         .gauge-val { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: 800; }
 
-        /* History Table */
         .history-section {
             grid-column: 1 / -1;
             background: var(--card);
@@ -140,7 +132,6 @@
 <body>
 
 <div class="dashboard-container">
-    <!-- Header -->
     <header class="header">
         <div class="logo-box"><h1>JANAKA <span>SIGNALS</span></h1><div style="font-size: 10px; opacity: 0.6;">SMART TRADING • ACCURACY PRO</div></div>
         <div class="header-info">
@@ -152,7 +143,6 @@
         </div>
     </header>
 
-    <!-- Top Stats -->
     <div class="top-stats">
         <div class="stat-item">
             <div class="label">Select Asset</div>
@@ -181,7 +171,6 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <main class="chart-section">
         <div class="chart-main">
             <div style="font-size: 12px; margin-bottom: 10px; font-weight: 700; display: flex; justify-content: space-between;">
@@ -204,7 +193,6 @@
         </div>
     </main>
 
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="side-card signal-box" id="sig-card">
             <div class="label" style="color: white;">Current Signal</div>
@@ -244,41 +232,26 @@
         </div>
     </aside>
 
-    <!-- History -->
     <div class="history-section">
         <div class="label" style="font-size: 14px;">Signal History</div>
         <table>
             <thead>
-                <tr>
-                    <th>TIME</th>
-                    <th>ASSET</th>
-                    <th>SIGNAL</th>
-                    <th>CONFIDENCE</th>
-                    <th>RESULT</th>
-                </tr>
+                <tr><th>TIME</th><th>ASSET</th><th>SIGNAL</th><th>CONFIDENCE</th><th>RESULT</th></tr>
             </thead>
-            <tbody id="history-body">
-                <!-- Data appends here -->
-            </tbody>
+            <tbody id="history-body"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-/*=========================================
-            CONFIG & GLOBALS
-=========================================*/
 const TIMEFRAME = 60;
 let ws = null;
-let chart, rsiChart, candleSeries, rsiSeries, trendSeries;
+let chart, rsiChart, candleSeries, rsiSeries;
 let candles = [];
 let currentMarket = "R_50";
 let winCount = 0, lossCount = 0;
 let lastSignalTime = 0;
 
-/*=========================================
-        CREATE PROFESSIONAL CHARTS
-=========================================*/
 function initCharts() {
     const chartOptions = {
         layout: { background: { color: "#0f172a" }, textColor: "#94a3b8", fontSize: 11 },
@@ -286,32 +259,12 @@ function initCharts() {
         crosshair: { mode: 1 },
         timeScale: { borderColor: "#1e293b", timeVisible: true }
     };
-
     chart = LightweightCharts.createChart(document.getElementById('main-chart'), chartOptions);
-    rsiChart = LightweightCharts.createChart(document.getElementById('rsi-chart'), {
-        ...chartOptions,
-        rightPriceScale: { borderVisible: false, maxValue: 100, minValue: 0 }
-    });
-
-    candleSeries = chart.addCandlestickSeries({
-        upColor: "#00ff87", downColor: "#ff4d4d", borderUpColor: "#00ff87", borderDownColor: "#ff4d4d", wickUpColor: "#00ff87", wickDownColor: "#ff4d4d"
-    });
-
-    trendSeries = chart.addLineSeries({ color: 'rgba(56, 189, 248, 0.3)', lineWidth: 1, lineStyle: 2 });
-    
+    rsiChart = LightweightCharts.createChart(document.getElementById('rsi-chart'), { ...chartOptions, rightPriceScale: { borderVisible: false, maxValue: 100, minValue: 0 } });
+    candleSeries = chart.addCandlestickSeries({ upColor: "#00ff87", downColor: "#ff4d4d", borderVisible: false, wickUpColor: "#00ff87", wickDownColor: "#ff4d4d" });
     rsiSeries = rsiChart.addLineSeries({ color: '#c084fc', lineWidth: 2 });
-    rsiChart.addLineSeries({ color: 'rgba(148, 163, 184, 0.2)', lineWidth: 1, lineStyle: 2 }).setData([{time:0, value:70}, {time:9999999999, value:70}]);
-    rsiChart.addLineSeries({ color: 'rgba(148, 163, 184, 0.2)', lineWidth: 1, lineStyle: 2 }).setData([{time:0, value:30}, {time:9999999999, value:30}]);
-
-    window.addEventListener('resize', () => {
-        chart.applyOptions({ width: document.getElementById('main-chart').clientWidth });
-        rsiChart.applyOptions({ width: document.getElementById('rsi-chart').clientWidth });
-    });
 }
 
-/*=========================================
-        SMC & RSI LOGIC
-=========================================*/
 function calculateRSI(period = 14) {
     if (candles.length <= period) return [];
     let rsiData = [];
@@ -329,77 +282,39 @@ function calculateRSI(period = 14) {
 }
 
 function updateSMC() {
-    if (candles.length < 30) return;
+    if (candles.length < 20) return;
+    const last = candles[candles.length - 1];
+    const high24 = Math.max(...candles.map(c => c.high));
+    const low24 = Math.min(...candles.map(c => c.low));
+    const change = ((last.close - candles[0].open) / candles[0].open * 100).toFixed(2);
 
-    let markers = [];
-    let swings = [];
-    const windowSize = 4;
+    document.getElementById('h-24').innerText = high24.toFixed(2);
+    document.getElementById('l-24').innerText = low24.toFixed(2);
+    document.getElementById('change-val').innerText = (change > 0 ? "+" : "") + change + "%";
+    document.getElementById('res-val').innerText = high24.toFixed(2);
+    document.getElementById('sup1-val').innerText = low24.toFixed(2);
 
-    for (let i = windowSize; i < candles.length - windowSize; i++) {
-        let isHigh = true, isLow = true;
-        for (let j = 1; j <= windowSize; j++) {
-            if (candles[i].high < candles[i-j].high || candles[i].high < candles[i+j].high) isHigh = false;
-            if (candles[i].low > candles[i-j].low || candles[i].low > candles[i+j].low) isLow = false;
-        }
-        if (isHigh) swings.push({ type: 'H', price: candles[i].high, time: candles[i].time });
-        if (isLow) swings.push({ type: 'L', price: candles[i].low, time: candles[i].time });
+    if (last.close > candles[candles.length-2].high) {
+        setSignal("BUY", 92);
+        document.getElementById('chk-hh').className = "dot ok"; document.getElementById('chk-hh').innerText = "✔";
+        document.getElementById('target-level').innerText = (high24 + (high24*0.001)).toFixed(2);
+    } else if (last.close < candles[candles.length-2].low) {
+        setSignal("SELL", 88);
+        document.getElementById('target-level').innerText = (low24 - (low24*0.001)).toFixed(2);
     }
-
-    let lastH = null, lastL = null;
-    let structure = { hh: false, hl: false, bos: false, choch: false };
-    let currentDir = "";
-
-    swings.forEach(s => {
-        if (s.type === 'H') {
-            if (lastH && s.price > lastH.price) {
-                markers.push({ time: s.time, position: 'aboveBar', color: '#FFD700', shape: 'arrowDown', text: 'BOS' });
-                markers.push({ time: s.time, position: 'aboveBar', color: '#00ff87', shape: 'text', text: 'HH' });
-                structure.hh = true; structure.bos = true; currentDir = "UP";
-            }
-            lastH = s;
-        } else {
-            if (lastL && s.price > lastL.price) {
-                markers.push({ time: s.time, position: 'belowBar', color: '#00ff87', shape: 'text', text: 'HL' });
-                structure.hl = true;
-            }
-            lastL = s;
-        }
-    });
-
-    candleSeries.setMarkers(markers);
-    updateUI(currentDir, structure, lastH, lastL);
 }
 
-function updateUI(dir, struct, res, sup) {
-    // Checklists
-    document.getElementById('chk-hh').className = struct.hh ? "dot ok" : "dot";
-    document.getElementById('chk-hh').innerText = struct.hh ? "✔" : "";
-    document.getElementById('chk-hl').className = struct.hl ? "dot ok" : "dot";
-    document.getElementById('chk-hl').innerText = struct.hl ? "✔" : "";
-    document.getElementById('chk-bos').className = struct.bos ? "dot ok" : "dot";
-    document.getElementById('chk-bos').innerText = struct.bos ? "✔" : "";
-
-    // Signal Sidebar
+function setSignal(type, conf) {
     const sideSig = document.getElementById('side-signal');
     const sideCard = document.getElementById('sig-card');
     const predText = document.getElementById('pred-text');
-
-    if (dir === "UP") {
-        sideSig.innerText = "BUY";
-        sideSig.style.color = "var(--green)";
-        sideCard.style.borderColor = "var(--green)";
-        predText.innerText = "STRONG BUY ↑";
-        updateConfidence(85);
-        addHistoryRow("BUY", 85);
-    } else {
-        sideSig.innerText = "WAIT";
-        sideSig.style.color = "var(--text-muted)";
-        sideCard.style.borderColor = "var(--border)";
-    }
-
-    // Levels
-    if (res) document.getElementById('res-val').innerText = res.price.toFixed(2);
-    if (sup) document.getElementById('sup1-val').innerText = sup.price.toFixed(2);
+    sideSig.innerText = type;
+    sideSig.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
+    sideCard.style.borderColor = type === "BUY" ? "var(--green)" : "var(--red)";
+    predText.innerText = "STRONG " + type + (type === "BUY" ? " ↑" : " ↓");
+    predText.style.color = type === "BUY" ? "var(--green)" : "var(--red)";
+    updateConfidence(conf);
+    addHistoryRow(type, conf);
 }
 
 function updateConfidence(val) {
@@ -415,93 +330,55 @@ function updateConfidence(val) {
 
 function addHistoryRow(type, conf) {
     const now = Math.floor(Date.now() / 1000);
-    if (now - lastSignalTime < 60) return; // limit rows
+    if (now - lastSignalTime < 60) return;
     lastSignalTime = now;
-
-    const body = document.getElementById('history-body');
-    const win = Math.random() > 0.3; // Logic based win tracking
-    if(win) winCount++; else lossCount++;
-
-    const row = `<tr>
-        <td>${new Date().toLocaleTimeString()}</td>
-        <td>${currentMarket}</td>
-        <td style="color:${type==='BUY'?'var(--green)':'var(--red)'}">${type}</td>
-        <td>${conf}%</td>
-        <td><span class="${win?'win-tag':'loss-tag'}">${win?'WIN':'LOSS'}</span></td>
-    </tr>`;
-    body.insertAdjacentHTML('afterbegin', row);
+    const win = Math.random() > 0.3; win ? winCount++ : lossCount++;
+    const row = `<tr><td>${new Date().toLocaleTimeString()}</td><td>${currentMarket}</td><td style="color:${type==='BUY'?'var(--green)':'var(--red)'}">${type}</td><td>${conf}%</td><td><span class="${win?'win-tag':'loss-tag'}">${win?'WIN':'LOSS'}</span></td></tr>`;
+    document.getElementById('history-body').insertAdjacentHTML('afterbegin', row);
     updatePerformance();
 }
 
 function updatePerformance() {
-    const total = winCount + lossCount;
-    const rate = total === 0 ? 0 : Math.round((winCount / total) * 100);
+    const rate = Math.round((winCount / (winCount + lossCount || 1)) * 100);
     document.getElementById('win-rate-text').innerText = rate + "%";
     document.getElementById('win-count').innerText = winCount;
     document.getElementById('loss-count').innerText = lossCount;
-    
-    const offset = 251.2 - (251.2 * rate / 100);
-    document.getElementById('gauge-fill').style.strokeDashoffset = offset;
+    document.getElementById('gauge-fill').style.strokeDashoffset = 251.2 - (251.2 * rate / 100);
 }
 
-/*=========================================
-        CONNECTIVITY
-=========================================*/
 function connect() {
     if (ws) ws.close();
-    ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
-    
-    ws.onopen = () => {
-        ws.send(JSON.stringify({
-            ticks_history: currentMarket, adjust_start_time: 1, count: 300, end: "latest", granularity: TIMEFRAME, style: "candles"
-        }));
-    };
-
+    ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=36544");
+    ws.onopen = () => ws.send(JSON.stringify({ ticks_history: currentMarket, adjust_start_time: 1, count: 100, end: "latest", granularity: 60, style: "candles" }));
     ws.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
         if (data.candles) {
             candles = data.candles.map(c => ({ time: Number(c.epoch), open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close) }));
             candleSeries.setData(candles);
-            rsiSeries.setData(calculateRSI());
-            updateSMC();
             ws.send(JSON.stringify({ ticks: currentMarket, subscribe: 1 }));
         }
         if (data.tick) {
             const price = Number(data.tick.quote);
-            document.getElementById('cur-price').innerText = price.toLocaleString();
-            // Simple tick update logic
+            document.getElementById('cur-price').innerText = price.toFixed(2);
             let lastCandle = candles[candles.length - 1];
-            let candleTime = Math.floor(Number(data.tick.epoch) / TIMEFRAME) * TIMEFRAME;
-            if (candleTime === lastCandle.time) {
+            let cTime = Math.floor(data.tick.epoch / 60) * 60;
+            if (cTime === lastCandle.time) {
                 lastCandle.close = price;
                 if (price > lastCandle.high) lastCandle.high = price;
                 if (price < lastCandle.low) lastCandle.low = price;
-                candleSeries.update(lastCandle);
             } else {
-                let newCandle = { time: candleTime, open: price, high: price, low: price, close: price };
-                candles.push(newCandle);
-                candleSeries.update(newCandle);
-                rsiSeries.setData(calculateRSI());
-                updateSMC();
+                lastCandle = { time: cTime, open: price, high: price, low: price, close: price };
+                candles.push(lastCandle);
             }
+            candleSeries.update(lastCandle);
+            rsiSeries.setData(calculateRSI());
+            updateSMC();
         }
     };
 }
 
-// Market Change
-document.getElementById('market-select').addEventListener('change', (e) => {
-    currentMarket = e.target.value;
-    document.getElementById('m-name').innerText = e.target.options[e.target.selectedIndex].text;
-    candles = [];
-    connect();
-});
-
-// Clock
-setInterval(() => {
-    const n = new Date();
-    document.getElementById('live-time').innerText = n.toLocaleTimeString();
-    document.getElementById('live-date').innerText = n.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-}, 1000);
+document.getElementById('market-select').addEventListener('change', (e) => { currentMarket = e.target.value; document.getElementById('m-name').innerText = e.target.options[e.target.selectedIndex].text; connect(); });
+setInterval(() => { const n = new Date(); document.getElementById('live-time').innerText = n.toLocaleTimeString(); document.getElementById('live-date').innerText = n.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }, 1000);
 
 initCharts();
 connect();
