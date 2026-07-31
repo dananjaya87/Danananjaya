@@ -228,7 +228,8 @@ margin-bottom:12px;
 
 width:100%;
 
-height:450px; /* Adjusted to give space for RSI */
+height:500px; /* Reduced slightly to fit RSI */
+
 border-radius:16px 16px 0 0;
 
 overflow:hidden;
@@ -239,7 +240,7 @@ border:1px solid var(--border);
 
 }
 
-/* RSI Container Style */
+/* --- RSI Chart Styles --- */
 #rsi-chart {
     width: 100%;
     height: 150px;
@@ -360,11 +361,8 @@ grid-template-columns:1fr 1fr;
 
 #chart{
 
-height:350px;
+height:400px;
 
-}
-#rsi-chart {
-    height: 120px;
 }
 
 }
@@ -439,11 +437,11 @@ height:350px;
     <div class="card chart-card">
 
         <div class="chart-title">
-            📈 LIVE MARKET CHART
+            📈 LIVE MARKET CHART & RSI
         </div>
 
         <div id="chart"></div>
-        <div id="rsi-chart"></div> <!-- New RSI Container -->
+        <div id="rsi-chart"></div> <!-- RSI Chart Container Added -->
 
     </div>
 
@@ -486,6 +484,7 @@ height:350px;
 const APP_ID = "1089";
 const TIMEFRAME = 60;
 const MAX_CANDLES = 300;
+const RSI_PERIOD = 14; // RSI Config
 
 
 /*=========================================
@@ -503,7 +502,7 @@ let currentMarket = "R_50";
 let resistanceLine = null;
 let supportLine = null;
 
-// --- New Global Variables for RSI ---
+// --- RSI Variables ---
 let rsiChart = null;
 let rsiSeries = null;
 
@@ -522,13 +521,13 @@ const rsiContainer = document.getElementById("rsi-chart");
 
 
 /*=========================================
-        RSI CALCULATION LOGIC
+        RSI CALCULATION
 =========================================*/
 
-function calculateRSIValues(data, period = 14) {
+function calculateRSI(data, period = 14) {
+    if (data.length <= period) return [];
+    
     let rsiData = [];
-    if (data.length <= period) return rsiData;
-
     let gains = 0;
     let losses = 0;
 
@@ -556,6 +555,13 @@ function calculateRSIValues(data, period = 14) {
     return rsiData;
 }
 
+function updateRSIIndicator() {
+    const rsiValues = calculateRSI(candles, RSI_PERIOD);
+    if (rsiValues.length > 0) {
+        rsiSeries.setData(rsiValues);
+    }
+}
+
 
 /*=========================================
         SMC LOGIC (AUTOMATIC)
@@ -567,10 +573,6 @@ function calculateSMC() {
     let markers = [];
     let swings = [];
     const windowSize = 4; // To find major swings
-
-    // Update RSI
-    const rsiValues = calculateRSIValues(candles);
-    rsiSeries.setData(rsiValues);
 
     // Find Swing Highs & Lows
     for (let i = windowSize; i < candles.length - windowSize; i++) {
@@ -647,6 +649,7 @@ function calculateSMC() {
 
     if (highSwings.length >= 2) {
         const lastHigh = highSwings[highSwings.length - 1];
+        const prevHigh = highSwings[highSwings.length - 2];
         
         // Add Horizontal Resistance
         resistanceLine = candleSeries.createPriceLine({
@@ -657,10 +660,13 @@ function calculateSMC() {
             axisLabelVisible: true,
             title: 'RESISTANCE',
         });
+
+        
     }
 
     if (lowSwings.length >= 2) {
         const lastLow = lowSwings[lowSwings.length - 1];
+        const prevLow = lowSwings[lowSwings.length - 2];
 
         // Add Horizontal Support
         supportLine = candleSeries.createPriceLine({
@@ -671,6 +677,8 @@ function calculateSMC() {
             axisLabelVisible: true,
             title: 'SUPPORT',
         });
+
+        
     }
 }
 
@@ -694,7 +702,7 @@ rightPriceScale:{ borderColor:"#253244" },
 timeScale:{ borderColor:"#253244", timeVisible:true, secondsVisible:false },
 crosshair:{ mode:1 },
 width:chartContainer.clientWidth,
-height:450
+height:500
 });
 
 candleSeries = chart.addCandlestickSeries({
@@ -713,49 +721,35 @@ trendSeries = chart.addLineSeries({
     lineStyle: 2,
 });
 
-/* --- CREATE RSI CHART --- */
+// --- Create RSI Chart ---
 rsiChart = LightweightCharts.createChart(rsiContainer, {
-    layout: {
-        background: { color: "#05070A" },
-        textColor: "#E5E7EB"
-    },
-    grid: {
-        vertLines: { color: "#162033" },
-        horzLines: { color: "#162033" }
-    },
-    rightPriceScale: { 
-        borderColor: "#253244",
-        minValue: 0,
-        maxValue: 100,
-    },
-    timeScale: { visible: false }, // Hide time scale on RSI to keep it clean
-    width: rsiContainer.clientWidth,
+    layout: { background: { color: "#05070A" }, textColor: "#E5E7EB" },
+    grid: { vertLines: { color: "#162033" }, horzLines: { color: "#162033" } },
+    rightPriceScale: { borderColor: "#253244", maxValue: 100, minValue: 0 },
+    timeScale: { visible: false }, // Hide RSI timescale to sync with main
+    width: chartContainer.clientWidth,
     height: 150
 });
 
 rsiSeries = rsiChart.addLineSeries({
-    color: '#FF00FF',
+    color: '#38BDF8',
     lineWidth: 2,
-    title: 'RSI (14)'
+    priceFormat: { type: 'volume' }
 });
 
-// Add RSI 70/30 levels
-rsiSeries.createPriceLine({ price: 70, color: '#FF4D4D', lineWidth: 1, lineStyle: 2, title: '70' });
-rsiSeries.createPriceLine({ price: 30, color: '#00FF88', lineWidth: 1, lineStyle: 2, title: '30' });
+// RSI Overbought/Oversold Lines
+rsiSeries.createPriceLine({ price: 70, color: 'rgba(255, 77, 77, 0.5)', lineWidth: 1, lineStyle: 2, title: 'OB' });
+rsiSeries.createPriceLine({ price: 30, color: 'rgba(0, 255, 136, 0.5)', lineWidth: 1, lineStyle: 2, title: 'OS' });
 
-// SYNC CHARTS
+// Sync RSI and Main Chart
 chart.timeScale().subscribeVisibleTimeRangeChange(range => {
     rsiChart.timeScale().setVisibleRange(range);
 });
 
-rsiChart.timeScale().subscribeVisibleTimeRangeChange(range => {
-    chart.timeScale().setVisibleRange(range);
-});
-
 
 window.addEventListener("resize",()=>{
-    chart.applyOptions({ width:chartContainer.clientWidth });
-    rsiChart.applyOptions({ width:rsiContainer.clientWidth });
+chart.applyOptions({ width:chartContainer.clientWidth });
+rsiChart.applyOptions({ width:chartContainer.clientWidth });
 });
 }
 
@@ -810,6 +804,7 @@ function connectDeriv() {
 
             candleSeries.setData(candles);
             calculateSMC();
+            updateRSIIndicator(); // Update RSI
             systemStatus.innerHTML = "LIVE";
 
             ws.send(JSON.stringify({
@@ -845,10 +840,7 @@ function connectDeriv() {
                 candleSeries.update(newCandle);
                 calculateSMC();
             }
-            
-            // Real-time RSI update call
-            const rsiValues = calculateRSIValues(candles);
-            rsiSeries.setData(rsiValues);
+            updateRSIIndicator(); // Update RSI on each tick
         }
     };
 
