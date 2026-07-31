@@ -159,6 +159,17 @@ function initStorage() {
             localStorage.removeItem('janaka_smc_pro_v6');
         }
     }
+
+    // --- MARKET එක මතක තබා ගැනීමට එක් කළ කොටස ---
+    const savedMarket = localStorage.getItem('janaka_selected_market');
+    if (savedMarket) {
+        currentMarket = savedMarket;
+        const marketSelect = document.getElementById("market");
+        marketSelect.value = savedMarket;
+        document.getElementById("marketName").innerText = marketSelect.options[marketSelect.selectedIndex].text;
+    }
+    // ------------------------------------------
+
     renderHistory();
     updateStatsUI();
 }
@@ -450,6 +461,9 @@ connectDeriv();
 
 document.getElementById("market").addEventListener("change", (e) => {
     currentMarket = e.target.value;
+    // --- මාර්කට් එක සේව් කිරීම ---
+    localStorage.setItem('janaka_selected_market', currentMarket);
+    // -------------------------
     document.getElementById("marketName").innerHTML = e.target.options[e.target.selectedIndex].text;
     candles = []; 
     activeTradeMarkers = []; 
