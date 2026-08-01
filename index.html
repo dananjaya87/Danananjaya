@@ -412,41 +412,43 @@ function calculateSMC() {
     let lastH = null, lastL = null, currentDir = "WAITING";
     let lineData = [];
     let recentBOS = false, recentCHOCH = false, hasFVG = false;
-    
+    let lastBOSDir = "WAITING";
+
     swings.forEach((s) => {
-        let label = "", color = "#FFFFFF";
+        let label = ""; let color = "#FFFFFF";
         if (s.type === 'H') {
             if (lastH && s.price > lastH.price) {
-                label = "HH"; color = "#00FF88"; recentBOS = true;
+                label = "HH"; color = "#00FF88";
                 markers.push({ time: s.time, position: 'aboveBar', color: '#FFD700', shape: 'arrowDown', text: 'BOS' });
-                currentDir = "UPTREND";
+                lastBOSDir = "UPTREND";
             } else if (lastH && s.price < lastH.price) {
                 label = "LH"; color = "#FF4D4D";
-                if(currentDir === "UPTREND") { 
-                    recentCHOCH = true;
+                if(lastBOSDir === "DOWNTREND") {
                     markers.push({ time: s.time, position: 'aboveBar', color: '#FF00FF', shape: 'arrowDown', text: 'CHOCH' });
+                    lastBOSDir = "UPTREND";
                 }
-                currentDir = "DOWNTREND";
             }
             lastH = s;
         } else {
             if (lastL && s.price < lastL.price) {
-                label = "LL"; color = "#FF4D4D"; recentBOS = true;
+                label = "LL"; color = "#FF4D4D";
                 markers.push({ time: s.time, position: 'belowBar', color: '#FFD700', shape: 'arrowUp', text: 'BOS' });
-                currentDir = "DOWNTREND";
+                lastBOSDir = "DOWNTREND";
             } else if (lastL && s.price > lastL.price) {
                 label = "HL"; color = "#00FF88";
-                if(currentDir === "DOWNTREND") {
-                    recentCHOCH = true;
+                if(lastBOSDir === "UPTREND") {
                     markers.push({ time: s.time, position: 'belowBar', color: '#FF00FF', shape: 'arrowUp', text: 'CHOCH' });
+                    lastBOSDir = "DOWNTREND";
                 }
-                currentDir = "UPTREND";
             }
             lastL = s;
         }
         if (label !== "") markers.push({ time: s.time, position: s.type === 'H' ? 'aboveBar' : 'belowBar', color: color, shape: 'text', text: label });
         lineData.push({ time: s.time, value: s.price });
     });
+    currentDir = lastBOSDir;
+            
+                
 
     const recentTime = candles[candles.length - 10].time;
     recentBOS = markers.some(m => m.text === "BOS" && m.time >= recentTime);
