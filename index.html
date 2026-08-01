@@ -191,7 +191,6 @@ select {
 <body>
 
 <div class="dashboard-container">
-    <!-- HEADER -->
     <header class="header">
         <div class="logo-section">
             <h1>Janaka Neural SMC <span style="color:var(--text-muted); font-weight:300;">V7</span></h1>
@@ -205,7 +204,6 @@ select {
         </div>
     </header>
 
-    <!-- STATS -->
     <div class="top-grid">
         <div class="glass-card">
             <div class="card-label">Market Selection</div>
@@ -221,11 +219,6 @@ select {
                     <option value="1HZ75V">Volatility 75 (1s)</option>
                     <option value="R_100">Volatility 100</option>
                     <option value="1HZ100V">Volatility 100 (1s)</option>
-                </optgroup>
-                <optgroup label="Forex Major">
-                    <option value="frxEURUSD">EUR / USD</option>
-                    <option value="frxGBPUSD">GBP / USD</option>
-                    <option value="frxUSDJPY">USD / JPY</option>
                 </optgroup>
             </select>
         </div>
@@ -249,26 +242,24 @@ select {
         </div>
     </div>
 
-    <!-- CHART -->
     <div class="chart-wrapper">
         <div id="chart"></div>
     </div>
 
-    <!-- ANALYSIS -->
     <div class="analysis-grid">
         <div class="glass-card">
             <div class="card-label">Neural Analysis & SMC Factors</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top:15px;">
                 <ul class="info-list" id="techniquesBox">
-                    <li>Key Level <span>-</span></li>
-                    <li>Order Block <span>-</span></li>
-                    <li>Fair Value Gap <span>-</span></li>
-                    <li>Engulfing <span>-</span></li>
+                    <li>Key Level <span id="val_key">-</span></li>
+                    <li>Order Block <span id="val_ob">-</span></li>
+                    <li>Fair Value Gap <span id="val_fvg">-</span></li>
+                    <li>Engulfing <span id="val_eng">-</span></li>
                 </ul>
                 <ul class="info-list" id="supportBox">
                     <li>Market Trend <span id="trend">-</span></li>
-                    <li>BOS detected <span>-</span></li>
-                    <li>CHOCH detected <span>-</span></li>
+                    <li>BOS detected <span id="val_bos">-</span></li>
+                    <li>CHOCH detected <span id="val_choch">-</span></li>
                     <li>Neural Score <span id="confidence">0%</span></li>
                 </ul>
             </div>
@@ -281,7 +272,6 @@ select {
         </div>
     </div>
 
-    <!-- HISTORY -->
     <div class="glass-card">
         <div class="card-label">Intelligent Signal History</div>
         <div class="history-container">
@@ -292,7 +282,6 @@ select {
         </div>
     </div>
 
-    <!-- SOUND HIDDEN -->
     <div style="display:none">
         <input type="checkbox" id="soundToggle" checked>
         <input type="range" id="volumeSlider" value="0.8" min="0" max="1" step="0.1">
@@ -301,17 +290,15 @@ select {
 
 <script>
 /**
- * JANAKA NEURAL SMC V7 ENGINE
- * Developed with Modern ES6+ JavaScript
+ * JANAKA NEURAL SMC V7 ENGINE - STABLE BUILD
  */
 
 const APP_ID = "1089";
-const TIMEFRAME = 60;
-let ws, chart, candleSeries, trendSeries;
+const TIMEFRAME = 60; // 1 minute
+let ws, chart, candleSeries;
 let candles = [];
 let currentMarket = "R_50";
-let activeMarkers = [];
-let activeLines = [];
+let pingInterval;
 
 let storage = {
     date: new Date().toLocaleDateString(),
@@ -319,7 +306,6 @@ let storage = {
     history: []
 };
 
-// --- INITIALIZATION ---
 const init = () => {
     loadStorage();
     createChart();
@@ -345,14 +331,14 @@ const startClock = () => {
     }, 1000);
 };
 
-// --- CHART ENGINE (UNTOUCHED LOGIC) ---
 const createChart = () => {
-    chart = LightweightCharts.createChart(document.getElementById("chart"), {
+    const chartEl = document.getElementById("chart");
+    chart = LightweightCharts.createChart(chartEl, {
         layout: { background: { color: "#020617" }, textColor: "#94a3b8" },
         grid: { vertLines: { color: "rgba(30, 41, 59, 0.5)" }, horzLines: { color: "rgba(30, 41, 59, 0.5)" } },
         rightPriceScale: { borderColor: "rgba(255,255,255,0.1)" },
         timeScale: { borderColor: "rgba(255,255,255,0.1)", timeVisible: true },
-        width: document.getElementById("chart").clientWidth,
+        width: chartEl.clientWidth,
         height: 500
     });
     candleSeries = chart.addCandlestickSeries({ 
@@ -360,18 +346,90 @@ const createChart = () => {
         borderUpColor: "#00ff88", borderDownColor: "#ff2e63", 
         wickUpColor: "#00ff88", wickDownColor: "#ff2e63" 
     });
-    trendSeries = chart.addLineSeries({ color: 'rgba(0, 242, 255, 0.2)', lineWidth: 1 });
 };
 
-// --- NEURAL SIGNAL LOGIC ---
+const connectDeriv = () => {
+    if (ws) { ws.close(); clearInterval(pingInterval); }
+    
+    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
+    
+    ws.onopen = () => {
+        document.getElementById("status").innerText = "CONNECTED";
+        document.getElementById("status").style.color = "var(--primary)";
+        
+        // පරණ දත්ත ඉල්ලීම
+        ws.send(JSON.stringify({ 
+            ticks_history: currentMarket, 
+            count: 300, 
+            end: "latest", 
+            granularity: TIMEFRAME, 
+            style: "candles" 
+        }));
+
+        // Connection එක මැරෙන්නේ නැතිව තියාගන්න (Ping)
+        pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ ping: 1 }));
+        }, 30000);
+    };
+
+    ws.onmessage = (msg) => {
+        const data = JSON.parse(msg.data);
+
+        // History Candles ලැබුණු විට
+        if (data.candles) {
+            candles = data.candles.map(c => ({ 
+                time: Number(c.epoch), 
+                open: Number(c.open), 
+                high: Number(c.high), 
+                low: Number(c.low), 
+                close: Number(c.close) 
+            }));
+            candleSeries.setData(candles);
+            calculateNeuralSMC();
+
+            // Live Updates වලට subscribe කිරීම
+            ws.send(JSON.stringify({ ohlc: currentMarket, subscribe: 1, granularity: TIMEFRAME }));
+        }
+
+        // Live Candle එක update වන විට
+        if (data.ohlc) {
+            const o = data.ohlc;
+            const updatedCandle = {
+                time: Number(o.open_time),
+                open: Number(o.open),
+                high: Number(o.high),
+                low: Number(o.low),
+                close: Number(o.close)
+            };
+
+            candleSeries.update(updatedCandle);
+
+            // Array එක update කිරීම (Analysis සඳහා)
+            if (candles.length > 0 && candles[candles.length - 1].time === updatedCandle.time) {
+                candles[candles.length - 1] = updatedCandle;
+            } else {
+                candles.push(updatedCandle);
+                if (candles.length > 500) candles.shift();
+            }
+            calculateNeuralSMC();
+        }
+    };
+
+    ws.onclose = () => {
+        document.getElementById("status").innerText = "RECONNECTING...";
+        document.getElementById("status").style.color = "var(--danger)";
+        setTimeout(connectDeriv, 3000); 
+    };
+};
+
 const calculateNeuralSMC = () => {
-    if (candles.length < 30) return;
+    if (candles.length < 20) return;
 
     let markers = [];
     let swings = [];
     const windowSize = 4;
 
-    // Detect Swings (High/Low)
+    // Swing Points detection
     for (let i = windowSize; i < candles.length - windowSize; i++) {
         let isHigh = true, isLow = true;
         for (let j = 1; j <= windowSize; j++) {
@@ -382,47 +440,51 @@ const calculateNeuralSMC = () => {
         if (isLow) swings.push({ type: 'L', price: candles[i].low, time: candles[i].time });
     }
 
-    let lastH = null, lastL = null, lastBOSDir = "WAITING";
-    let recentBOS = false, recentCHOCH = false, hasFVG = false;
+    let lastBOSDir = "SIDEWAYS";
+    let lastH = null, lastL = null;
+    let bosDetected = false;
 
     swings.forEach(s => {
         if (s.type === 'H') {
             if (lastH && s.price > lastH.price) {
                 markers.push({ time: s.time, position: 'aboveBar', color: '#00f2ff', shape: 'arrowDown', text: 'BOS' });
                 lastBOSDir = "UPTREND";
+                bosDetected = true;
             }
             lastH = s;
         } else {
             if (lastL && s.price < lastL.price) {
                 markers.push({ time: s.time, position: 'belowBar', color: '#00f2ff', shape: 'arrowUp', text: 'BOS' });
                 lastBOSDir = "DOWNTREND";
+                bosDetected = true;
             }
             lastL = s;
         }
     });
 
-    // FVG Detection
-    const lastIdx = candles.length - 1;
-    if (candles[lastIdx-2].high < candles[lastIdx].low) hasFVG = true;
-    else if (candles[lastIdx-2].low > candles[lastIdx].high) hasFVG = true;
-
-    const last = candles[lastIdx];
-    const prev = candles[lastIdx-1];
+    // FVG & Engulfing Logic
+    const last = candles[candles.length - 1];
+    const prev = candles[candles.length - 2];
+    const prev2 = candles[candles.length - 3];
+    
+    const hasFVG = (prev2.high < last.low) || (prev2.low > last.high);
     const isEngulfing = (last.close > last.open && prev.close < prev.open && last.close > prev.open) || 
                        (last.close < last.open && prev.close > prev.open && last.close < prev.open);
 
-    // NEURAL SCORING (The AI Part)
-    let score = 0;
-    if (lastBOSDir !== "WAITING") score += 30;
-    if (hasFVG) score += 20;
-    if (isEngulfing) score += 20;
-    if (swings.length > 5) score += 15;
-    if (Math.abs(last.close - last.open) > Math.abs(prev.close - prev.open)) score += 15;
+    let score = (bosDetected ? 40 : 0) + (hasFVG ? 20 : 0) + (isEngulfing ? 30 : 0);
 
-    // UI UPDATES
+    // Update UI
+    document.getElementById("trend").innerText = lastBOSDir;
+    document.getElementById("confidence").innerText = score + "%";
+    document.getElementById("val_key").innerText = swings.length > 0 ? "YES" : "NO";
+    document.getElementById("val_ob").innerText = score > 50 ? "DETECTED" : "NONE";
+    document.getElementById("val_fvg").innerText = hasFVG ? "YES" : "NO";
+    document.getElementById("val_eng").innerText = isEngulfing ? "YES" : "NO";
+    document.getElementById("val_bos").innerText = bosDetected ? "YES" : "NO";
+    document.getElementById("val_choch").innerText = score > 80 ? "YES" : "NONE";
+
     const sigBox = document.getElementById("signalBox");
     const sigText = document.getElementById("signal");
-    
     sigBox.classList.remove("active-buy", "active-sell");
 
     if (score >= 80) {
@@ -430,8 +492,8 @@ const calculateNeuralSMC = () => {
         sigText.innerText = `STRONG ${type}`;
         sigText.style.color = type === "BUY" ? "var(--success)" : "var(--danger)";
         sigBox.classList.add(type === "BUY" ? "active-buy" : "active-sell");
-        
-        // Trigger Signal
+
+        // Trigger Signal every 2 mins max
         const lastSig = storage.history[storage.history.length - 1];
         if (!lastSig || (Date.now() - lastSig.id > 120000)) {
             executeSignal(type, score, last.close);
@@ -441,57 +503,9 @@ const calculateNeuralSMC = () => {
         sigText.style.color = "white";
     }
 
-    document.getElementById("trend").innerText = lastBOSDir;
-    document.getElementById("confidence").innerText = score + "%";
-    document.getElementById("techniquesBox").innerHTML = `
-        <li>Key Level <span>${swings.length > 0 ? "YES" : "NO"}</span></li>
-        <li>Order Block <span>${score > 50 ? "DETECTED" : "NONE"}</span></li>
-        <li>Fair Value Gap <span>${hasFVG ? "YES" : "NO"}</span></li>
-        <li>Engulfing <span>${isEngulfing ? "YES" : "NO"}</span></li>
-    `;
-
-    candleSeries.setMarkers([...markers, ...activeMarkers]);
+    candleSeries.setMarkers(markers);
 };
 
-// --- DATA & NETWORKING ---
-const connectDeriv = () => {
-    if (ws) ws.close();
-    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
-    
-    ws.onopen = () => {
-        document.getElementById("status").innerText = "CONNECTED";
-        ws.send(JSON.stringify({ ticks_history: currentMarket, count: 300, end: "latest", granularity: TIMEFRAME, style: "candles" }));
-    };
-
-    ws.onmessage = (msg) => {
-        const data = JSON.parse(msg.data);
-        if (data.candles) {
-            candles = data.candles.map(c => ({ time: Number(c.epoch), open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close) }));
-            candleSeries.setData(candles);
-            calculateNeuralSMC();
-            ws.send(JSON.stringify({ ticks: currentMarket, subscribe: 1 }));
-        }
-        if (data.tick) {
-            const price = Number(data.tick.quote);
-            const candleTime = Math.floor(Number(data.tick.epoch) / TIMEFRAME) * TIMEFRAME;
-            let lastCandle = candles[candles.length - 1];
-
-            if (lastCandle && candleTime === lastCandle.time) {
-                lastCandle.close = price;
-                lastCandle.high = Math.max(lastCandle.high, price);
-                lastCandle.low = Math.min(lastCandle.low, price);
-                candleSeries.update(lastCandle);
-            } else {
-                const newCandle = { time: candleTime, open: price, high: price, low: price, close: price };
-                candles.push(newCandle);
-                candleSeries.update(newCandle);
-                calculateNeuralSMC();
-            }
-        }
-    };
-};
-
-// --- SIGNAL EXECUTION ---
 const executeSignal = (type, conf, price) => {
     const id = Date.now();
     const newSig = {
@@ -509,36 +523,32 @@ const executeSignal = (type, conf, price) => {
     renderHistory();
     playAlert(type);
 
-    // Simulated Result (3 mins)
+    // Simulate Result
     setTimeout(() => {
         const currentClose = candles[candles.length - 1].close;
         const win = (type === "BUY" && currentClose > price) || (type === "SELL" && currentClose < price);
-        const sigIdx = storage.history.findIndex(s => s.id === id);
-        if(sigIdx !== -1) {
-            storage.history[sigIdx].result = win ? "WIN" : "LOSS";
+        const idx = storage.history.findIndex(s => s.id === id);
+        if(idx !== -1) {
+            storage.history[idx].result = win ? "WIN" : "LOSS";
             if(win) storage.wins++; else storage.losses++;
             saveStorage();
             updateStatsUI();
             renderHistory();
         }
-    }, 180000);
+    }, 60000); 
 };
 
 const updateStatsUI = () => {
-    const rate = storage.total > 0 ? Math.round((storage.wins / (storage.wins + storage.losses || 1)) * 100) : 0;
+    const totalTrades = storage.wins + storage.losses;
+    const rate = totalTrades > 0 ? Math.round((storage.wins / totalTrades) * 100) : 0;
     document.getElementById("winRate").innerText = rate + "%";
-    
-    const circle = document.getElementById("winRateCircle");
-    const offset = 157 - (157 * rate / 100);
-    circle.style.strokeDashoffset = offset;
+    document.getElementById("winRateCircle").style.strokeDashoffset = 157 - (157 * rate / 100);
 };
 
 const renderHistory = () => {
-    const container = document.getElementById("signalHistory");
-    container.innerHTML = storage.history.slice().reverse().map(s => `
+    document.getElementById("signalHistory").innerHTML = storage.history.slice().reverse().map(s => `
         <div class="history-item">
-            <div>${s.time}</div>
-            <div>${s.market}</div>
+            <div>${s.time}</div><div>${s.market}</div>
             <div style="color:${s.type === 'BUY' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${s.type}</div>
             <div>${s.conf}%</div>
             <div style="color:${s.result === 'WIN' ? 'var(--success)' : (s.result === 'LOSS' ? 'var(--danger)' : 'white')}">${s.result}</div>
@@ -550,12 +560,11 @@ const saveStorage = () => localStorage.setItem('janaka_neural_v7', JSON.stringif
 
 const playAlert = (type) => {
     if(!document.getElementById("soundToggle").checked) return;
-    const msg = new SpeechSynthesisUtterance(`Neural Engine detected high probability ${type} signal`);
+    const msg = new SpeechSynthesisUtterance(`Neural Engine detected ${type} signal`);
     msg.volume = document.getElementById("volumeSlider").value;
     window.speechSynthesis.speak(msg);
 };
 
-// --- EVENTS ---
 document.getElementById("market").addEventListener("change", (e) => {
     currentMarket = e.target.value;
     document.getElementById("marketName").innerText = e.target.options[e.target.selectedIndex].text;
@@ -565,7 +574,6 @@ document.getElementById("market").addEventListener("change", (e) => {
 
 window.addEventListener("resize", () => chart.applyOptions({ width: document.getElementById("chart").clientWidth }));
 
-// Start Everything
 init();
 </script>
 </body>
