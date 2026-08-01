@@ -96,23 +96,54 @@ select:focus{border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,.3);}
         <div class="card">
             <h3>📊 SELECT MARKET</h3>
             <select id="market">
-                <option value="R_10">Volatility 10</option>
-                <option value="R_25">Volatility 25</option>
-                <option value="R_50" selected>Volatility 50</option>
-                <option value="R_75">Volatility 75</option>
-                <option value="R_100">Volatility 100</option>
-                <option value="JD10">Jump 10</option>
-                <option value="JD25">Jump 25</option>
-                <option value="JD50">Jump 50</option>
-                <option value="JD75">Jump 75</option>
-                <option value="JD100">Jump 100</option>
-                <option value="RDBEAR">Bear Market</option>
-                <option value="RDBULL">Bull Market</option>
-                <option value="frxEURUSD">EUR / USD</option>
-                <option value="frxGBPUSD">GBP / USD</option>
-                <option value="frxUSDJPY">USD / JPY</option>
-                <option value="frxAUDUSD">AUD / USD</option>
-            </select>
+    <!-- --- VOLATILITY INDICES (ALL) --- -->
+    <optgroup label="Volatility Indices">
+        <option value="R_10">Volatility 10</option>
+        <option value="1HZ10V">Volatility 10 (1s)</option>
+        <option value="R_25">Volatility 25</option>
+        <option value="1HZ25V">Volatility 25 (1s)</option>
+        <option value="R_50" selected>Volatility 50</option>
+        <option value="1HZ50V">Volatility 50 (1s)</option>
+        <option value="R_75">Volatility 75</option>
+        <option value="1HZ75V">Volatility 75 (1s)</option>
+        <option value="R_100">Volatility 100</option>
+        <option value="1HZ100V">Volatility 100 (1s)</option>
+        <option value="R_200">Volatility 200 (1s)</option>
+        <option value="R_300">Volatility 300 (1s)</option>
+    </optgroup>
+
+    <!-- --- JUMP & DAILY RESET --- -->
+    <optgroup label="Jump & Others">
+        <option value="JD10">Jump 10</option>
+        <option value="JD25">Jump 25</option>
+        <option value="JD50">Jump 50</option>
+        <option value="JD75">Jump 75</option>
+        <option value="JD100">Jump 100</option>
+        <option value="RDBEAR">Bear Market</option>
+        <option value="RDBULL">Bull Market</option>
+    </optgroup>
+
+    <!-- --- FOREX MAJOR --- -->
+    <optgroup label="Forex Major">
+        <option value="frxEURUSD">EUR / USD</option>
+        <option value="frxGBPUSD">GBP / USD</option>
+        <option value="frxUSDJPY">USD / JPY</option>
+        <option value="frxAUDUSD">AUD / USD</option>
+        <option value="frxUSDCAD">USD / CAD</option>
+        <option value="frxUSDCHF">USD / CHF</option>
+        <option value="frxNZDUSD">NZD / USD</option>
+    </optgroup>
+
+    <!-- --- FOREX MINOR --- -->
+    <optgroup label="Forex Minor">
+        <option value="frxEURGBP">EUR / GBP</option>
+        <option value="frxEURJPY">EUR / JPY</option>
+        <option value="frxGBPJPY">GBP / JPY</option>
+        <option value="frxEURAUD">EUR / AUD</option>
+        <option value="frxAUDJPY">AUD / JPY</option>
+        <option value="frxGBPAUD">GBP / AUD</option>
+    </optgroup>
+</select>
         </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
