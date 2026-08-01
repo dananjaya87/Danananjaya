@@ -294,7 +294,8 @@ function saveStorage() {
     localStorage.setItem('janaka_smc_pro_v6', JSON.stringify(signalStorage));
 }
 
-function renderHistory() {
+
+     function renderHistory() {
     const container = document.getElementById("signalHistory");
     container.innerHTML = "";
     signalStorage.history.slice().reverse().forEach(sig => {
@@ -306,7 +307,12 @@ function renderHistory() {
         if(sig.result === "WIN") resColor = "#00FF88";
         else if(sig.result === "LOSS") resColor = "#FF4D4D";
 
-        div.innerHTML = `${sig.time} | ${sig.market} | ${sig.type} | ${sig.conf}% | <span id="res-${sig.id}" style="color:${resColor}; font-weight:bold;">${sig.result}</span>`;
+        // මෙන්න මේ පේළිය විතරයි අලුතින් එකතු කළේ
+        let typeColor = sig.type === "BUY" ? "#00FF88" : (sig.type === "SELL" ? "#FF4D4D" : "white");
+
+        // මෙතන ${sig.type} කියන එක span එකක් ඇතුළට දැම්මා පාට පේන්න
+        div.innerHTML = `${sig.time} | ${sig.market} | <span style="color:${typeColor}; font-weight:bold;">${sig.type}</span> | ${sig.conf}% | <span id="res-${sig.id}" style="color:${resColor}; font-weight:bold;">${sig.result}</span>`;
+        
         container.appendChild(div);
     });
 }
