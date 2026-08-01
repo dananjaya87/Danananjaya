@@ -483,7 +483,7 @@ function calculateSMC() {
     const signalBox = document.getElementById("signalBox");
     signalBox.classList.remove("signal-active-green", "signal-active-red");
 
-    if (currentDir !== "WAITING" && mainCount >= 3) {
+    if (currentDir !== "WAITING" && mainCount >= 4) {
         if (currentDir === "UPTREND") {
             signalText = "STRONG BUY 🟢";
             signalBox.classList.add("signal-active-green");
